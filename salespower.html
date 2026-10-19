@@ -73,6 +73,11 @@
   .nav a.act{ color:var(--spgold); border-left-color:var(--spgold); background:rgba(231,196,125,.09); }
   .nav .ic{ width:18px; text-align:center; opacity:.8; }
   .nav .ct{ margin-left:auto; font-size:10px; background:rgba(255,255,255,.08); padding:1px 7px; border-radius:99px; }
+  .nav a[data-v="okr"]{ position:relative; }
+  .nav a[data-v="okr"]::before{ content:""; position:absolute; left:8px; top:50%; transform:translateY(-50%); width:7px; height:7px; border-radius:50%; background:#C7F542; box-shadow:0 0 6px rgba(199,245,66,.7); }
+  .nav a[data-v="okr"].act{ color:#C7F542; border-left-color:#C7F542; background:rgba(199,245,66,.10); }
+  .okr-band{ border-top:3px solid #C7F542; }
+  .okr-kicker{ color:#C7F542; font-weight:800; letter-spacing:.08em; }
   .health-mini{ margin:14px 20px; }
   .logo{ display:flex; align-items:center; justify-content:center; padding:4px 20px 0; }
   .logo img{ max-width:195px; height:auto; display:block; }
@@ -501,13 +506,13 @@
   <!-- ======== OBJECTIUS / OKR (mòdul, accent llima) ======== -->
   <section class="view" id="view-okr">
     <div class="flex items-center justify-between mb-2">
-      <div><div class="kicker">Objectius · OKR</div>
-        <h1 class="serif text-4xl" style="margin:0">Objectius i resultats clau</h1></div>
+      <div><div class="kicker okr-kicker">OKR · Objectives Key Results</div>
+        <h1 class="serif text-4xl" style="margin:0; color:#C7F542">Objectius i resultats clau</h1></div>
       <div class="bdg b-gold" id="okrPer">Q4</div>
     </div>
     <p class="text-sm muted mb-4 max-w-2xl">Seguiment dels objectius del trimestre i dels seus resultats clau (KRs). El color de cada estat surt de regles documentades: <b>en termini</b>, <b>endarrerit</b> o <b>en risc</b>.</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-      <div class="card" style="border-top:3px solid #C7F542"><div class="kicker">Progrés agregat OKR</div><div class="text-3xl font-extrabold mt-1" id="okrProg">0%</div><div class="text-xs muted">mitjana ponderada de KRs vàlids</div></div>
+      <div class="card okr-band" style="border-top:3px solid #C7F542"><div class="kicker">Progrés agregat OKR</div><div class="text-3xl font-extrabold mt-1" id="okrProg">0%</div><div class="text-xs muted">mitjana ponderada de KRs vàlids</div></div>
       <div class="card"><div class="kicker">Resultats clau actius</div><div class="text-3xl font-extrabold mt-1" id="okrKRs">0</div><div class="text-xs muted"><span id="okrKRmade">0</span> assolits</div></div>
       <div class="card"><div class="kicker">Confiança de l'equip</div><div class="text-3xl font-extrabold mt-1" id="okrConf">0,0</div><div class="text-xs muted">mitjana de respostes del període (sobre 5)</div></div>
     </div>
@@ -515,7 +520,7 @@
       <div class="card lg:col-span-2"><div class="kicker mb-1">Evolució del resultat clau</div>
         <div class="flex flex-wrap gap-2 mb-2" id="okrKRPick"></div>
         <div id="okrChart" style="width:100%;height:300px"></div>
-        <div class="text-xs muted mt-2" id="okrChartNote">Línia real vs meta. Les línies discontínues són estimació.</div>
+        <div class="text-xs mt-2" id="okrChartNote" style="color:#C7F542">Línia real vs meta. Les línies discontínues són estimació.</div>
       </div>
       <div class="card" id="okrDestac"><div class="kicker mb-1">Objectiu destacat</div><div id="okrDestacBody"></div></div>
     </div>
