@@ -233,6 +233,10 @@
   .think{ font-size:11px; color:var(--muted); font-style:italic; background:rgba(255,255,255,.04); padding:8px 12px; border-radius:10px; display:inline-block; animation:blink 1.4s ease-in-out infinite; }
   @keyframes blink{ 50%{opacity:.4} }
   @media (prefers-reduced-motion: reduce){ .rx{opacity:1;transform:none;transition:none} .shimmer{animation:none} .bar,.barV{transition:none} .view.act{animation:none} }
+
+  .rr-spark{ display:flex; align-items:flex-end; gap:2px; height:28px; margin-top:8px; }
+  .rr-spark .rrbar{ flex:1; background:linear-gradient(180deg,#15D9CD,#0e8f88); border-radius:2px; }
+  .rr-funnel{ background:linear-gradient(90deg,#15D9CD,#29A7D5); border-radius:6px; padding:2px 10px; text-align:right; min-width:26px; }
 </style>
 </head>
 <body>
@@ -259,6 +263,7 @@
     <a data-v="okr" data-mod="okr"><span class="ic">🎯</span>Objectius</a>
     <a data-v="autos"><span class="ic">⚡</span>Automatitzacions <span class="ct" id="autosCount"></span></a>
     <a data-v="report"><span class="ic">📄</span>Reporting <span class="ct" id="reportLock">🔒</span></a>
+    <a data-v="rrhh" data-mod="rrhh"><span class="ic">👥</span>Equip</a>
     <a data-v="cfg"><span class="ic">⚙️</span>Configuració</a>
   </nav>
 </aside>
@@ -523,6 +528,39 @@
     <div class="card mt-4">
       <div class="kicker mb-2">Tots els objectius</div>
       <table class="tbl"><thead><tr><th>Objectiu</th><th>Àrea</th><th>Responsable</th><th>Progrés</th><th>Estat</th><th>KRs</th></tr></thead><tbody id="okrTable"></tbody></table>
+    </div>
+  </section>
+
+
+
+  <!-- ======== EQUIP / RRHH (mòdul, accent turquesa) ======== -->
+  <section class="view" id="view-rrhh" style="background:linear-gradient(135deg, rgba(21,217,205,.08), rgba(0,0,0,0) 60%); border-top:2px solid rgba(21,217,205,.5);">
+    <div class="flex items-center justify-between mb-2">
+      <div><div class="kicker" style="color:#15D9CD">Equip · Persones</div>
+        <h1 class="serif text-4xl" style="margin:0">Equip i talent</h1></div>
+      <div class="bdg b-gold">2026</div>
+    </div>
+    <p class="text-sm muted mb-4 max-w-2xl">Visió de la plantilla, la retenció i la selecció. Les dades són agregats per departament: <b>cap dada personal ni salarial</b>.</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      <div class="card" style="border-top:3px solid #15D9CD"><div class="kicker">Persones actives</div><div class="text-3xl font-extrabold mt-1" id="rrAct">—</div><div class="text-xs muted"><span id="rrActVar" style="color:#15D9CD">—</span> vs mes anterior</div><div id="rrSparkPlantilla" class="rr-spark"></div></div>
+      <div class="card"><div class="kicker">Retenció (mensual)</div><div class="text-3xl font-extrabold mt-1" id="rrRet">—</div><div class="text-xs muted">continuïtat de la plantilla</div></div>
+      <div class="card"><div class="kicker">Temps de contractació</div><div class="text-3xl font-extrabold mt-1" id="rrTemps">—</div><div class="text-xs muted">mitjana d'ofertes acceptades</div></div>
+      <div class="card"><div class="kicker">Compromís</div><div class="text-3xl font-extrabold mt-1" id="rrComp">—</div><div class="text-xs muted" id="rrCompN">—</div></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+      <div class="card"><div class="kicker mb-1">Plantilla mensual</div><div id="rrPlantillaChart" style="width:100%;height:220px"></div></div>
+      <div class="card"><div class="kicker mb-1">Composició de l'equip</div>
+        <div class="flex items-center gap-4"><div id="rrComposicio"></div><div id="rrCompLeg" class="space-y-1"></div></div></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+      <div class="card"><div class="kicker mb-2">Activitat recent</div><div id="rrActivitat"></div></div>
+      <div class="card"><div class="kicker mb-2">Embut de selecció</div><div id="rrFunnel"></div></div>
+      <div class="card"><div class="kicker mb-2">Objectius RRHH</div><div id="rrObjectius"></div></div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="card"><div class="kicker">Absències (mes)</div><div class="text-2xl font-extrabold mt-1" id="rrAbs">—</div></div>
+      <div class="card"><div class="kicker">Rotació anual</div><div class="text-2xl font-extrabold mt-1" id="rrRot">—</div></div>
+      <div class="card"><div class="kicker">Cost per incorporació</div><div class="text-2xl font-extrabold mt-1" id="rrCost">—</div></div>
     </div>
   </section>
 
@@ -966,6 +1004,7 @@ function go(v){
   document.querySelectorAll(".rx").forEach(el=>el.classList.add("in"));
   window.scrollTo({top:0,behavior:"smooth"});
   if(v==="okr") renderOKR();
+  if(v==="rrhh") renderRRHH();
   if(v==="ins") renderInsights();
   if(v==="autos") renderAutos();
   if(v==="report") renderReport();
@@ -1854,6 +1893,124 @@ function okrMostraQuart(q){
 }
 window.okrMostraQuart = okrMostraQuart; window.OKRQ = OKRQ;
 /* ============== fi selector de període ============== */
+/* ============== MÒDUL EQUIP / RRHH (accent turquesa #15D9CD) ==============
+   Segons document SPAI §5: KPIs (persones actives, retenció, temps de contractació,
+   compromís), plantilla mensual + composició per departament, activitat + embut de
+   selecció + objectius RRHH. Dades demo coherents i deterministes (no inventades en calent).
+   Regla: plantilla = persones actives a data de tall (enter); retenció/rotació es calculen;
+   absentisme = hores d'absència / hores planificades. No s'exposen fitxes ni salaris. */
+
+const RRHH = {
+  departaments: ["Operacions","Vendes","Administració","Tècnica"],
+  /* plantilla mensual (persones actives a final de mes) — 12 mesos Gen→Des */
+  plantilla: [18,19,20,21,22,21,22,23,24,24,25,26],
+  /* composició actual per departament (persones enteres) */
+  composicio: { "Operacions":8, "Vendes":7, "Administració":5, "Tècnica":6 },
+  /* absències per mes (hores d'absència sobre 160 planificades/empleat · aproximació) */
+  absencies: [34,38,29,41,37,35,44,30,33,52,28,39],
+  /* embut de selecció (cohort del trimestre) */
+  embut: [ {etapa:"Candidatures", n:60}, {etapa:"Entrevista tècnica", n:34}, {etapa:"Entrevista final", n:16}, {etapa:"Ofertes", n:9}, {etapa:"Incorporacions", n:6} ],
+  /* temps de contractació mitjà (dies): */
+  tempsContractacio: 34,
+  rotacio: 14.2,       // % rotació anual
+  costContractacio: 3100, // € estimat per incorporació
+  compromis: 4.1,     // mitjana de respostes (escala 1–5)
+  compromisRespostes: 42,
+  /* activitat recent (listat demore amb estat) */
+  activitat: [
+    { t:"Incorporació · Marc Vila", d:"Tècnica", data:"14/10", estat:"feta" },
+    { t:"Entrevista final · Ana Costa", d:"Vendes", data:"17/10", estat:"pendent" },
+    { t:"Formació onboarding · 3 persones", d:"Operacions", data:"18/10", estat:"pendent" },
+    { t:"Revisió d'objectius Q4", d:"Tots", data:"20/10", estat:"propera" }
+  ],
+  /* objectius RRHH amb progrés */
+  objectius: [
+    { t:"Reduir el temps de contractació a 30 dies", v:34, meta:30, direccio:"reduir" },
+    { t:"Pujar el compromís a 4.5/5", v:4.1, meta:4.5, direccio:"augmentar" },
+    { t:"Formar tot l'equip en seguretat", v:72, meta:100, direccio:"augmentar" }
+  ]
+};
+
+function rrhhProgres(o){
+  if(o.direccio==="reduir"){
+    if(o.v<=o.meta) return 1;
+    // de (inicial a meta): no tenim inicial, aproximem relatiu: queda 1 - (v-meta)/max(v,1)
+    const exces = Math.max(0, o.v - o.meta);
+    return Math.max(0, 1 - exces/Math.max(o.v,1));
+  }
+  return Math.max(0, Math.min(1, o.v/o.meta));
+}
+
+function renderRRHH(){
+  // KPIs
+  const act = RRHH.plantilla[RRHH.plantilla.length-1];
+  const prev = RRHH.plantilla[RRHH.plantilla.length-2];
+  setText("rrAct", act);
+  setText("rrActVar", (act-prev>=0?"+":"")+(act-prev));
+  const retMes = Math.round((act/prev)*1000)/10; // retenció mes a mes (prox)
+  setText("rrRet", retMes+"%");
+  setText("rrTemps", RRHH.tempsContractacio+" d");
+  setText("rrComp", RRHH.compromis.toLocaleString('ca').replace('.',','));
+  setText("rrCompN", RRHH.compromisRespostes+" respostes");
+  // minigràfic KPI 1 (plantilla)
+  const mg = document.getElementById("rrSparkPlantilla");
+  if(mg){ mg.style.setProperty("--rrn", RRHH.plantilla.length); mg.innerHTML = RRHH.plantilla.map((v,i)=>`<span class="rrbar" style="height:${Math.round(v/RRHH.plantilla[RRHH.plantilla.length-1]*100)}%"></span>`).join(''); }
+  // barres mensuals de plantilla (ECharts)
+  const bc=document.getElementById("rrPlantillaChart");
+  if(bc && window.echarts){
+    const ch=echarts.init(bc);
+    ch.setOption({
+      backgroundColor:"transparent",
+      tooltip:{trigger:"axis"},
+      grid:{left:38,right:12,top:20,bottom:24},
+      xAxis:{type:"category",data:["G","F","M","A","Mg","Jn","Jl","Ag","S","O","N","D"],axisLabel:{color:"#A8B3BF"}},
+      yAxis:{type:"value",name:"persones",nameTextStyle:{color:"#A8B3BF"},axisLabel:{color:"#A8B3BF"}},
+      series:[{type:"bar",data:RRHH.plantilla,itemStyle:{color:"#15D9CD",borderRadius:[4,4,0,0]},barMaxWidth:20}]
+    });
+  }
+  // donut de composició per departament
+  const dc=document.getElementById("rrComposicio");
+  if(dc){
+    const tot=RRHH.composicio["Operacions"]+RRHH.composicio["Vendes"]+RRHH.composicio["Administració"]+RRHH.composicio["Tècnica"];
+    const cols=["#15D9CD","#29A7D5","#5CEBDB","#208CFF"];
+    let acc=0, seg="";
+    const rr = 40;
+    RRHH.departaments.forEach((d,i)=>{
+      const n=RRHH.composicio[d];
+      const frac=n/tot;
+      const a0=acc*2*Math.PI; const a1=(acc+frac)*2*Math.PI;
+      const x1=50+rr*Math.cos(a0), y1=50+rr*Math.sin(a0);
+      const x2=50+rr*Math.cos(a1), y2=50+rr*Math.sin(a1);
+      const big=frac>0.5?1:0;
+      seg+=`<path d="M50,50 L${x1},${y1} A${rr},${rr} 0 ${big} 1 ${x2},${y2} Z" fill="${cols[i]}"/>`;
+      acc+=frac;
+    });
+    dc.innerHTML=`<svg viewBox="0 0 100 100" style="width:160px;height:160px">${seg}<circle cx="50" cy="50" r="${rr*0.55}" fill="#0E1D24"/></svg>`;
+    const leg=document.getElementById("rrCompLeg");
+    if(leg){ leg.innerHTML=RRHH.departaments.map((d,i)=>`<div class="flex items-center gap-2"><span style="width:10px;height:10px;border-radius:3px;background:${cols[i]}"></span><span class="text-xs">${d}</span><b class="text-xs">${RRHH.composicio[d]} (${Math.round(RRHH.composicio[d]/tot*100)}%)</b></div>`).join(''); }
+  }
+  // activitat recent
+  const al=document.getElementById("rrActivitat");
+  if(al){
+    al.innerHTML=RRHH.activitat.map(a=>`<div class="flex items-center justify-between py-1.5" style="border-bottom:1px solid var(--row-line)"><div><div class="text-sm">${a.t}</div><div class="text-xs muted">${a.d} · ${a.data}</div></div><span class="bdg ${a.estat==="feta"?"b-green":a.estat==="pendent"?"b-orange":"b-blue"}">${a.estat}</span></div>`).join('');
+  }
+  // embut de selecció
+  const fu=document.getElementById("rrFunnel");
+  if(fu){
+    const max=RRHH.embut[0].n;
+    fu.innerHTML=RRHH.embut.map((e,i)=>`<div class="flex items-center gap-2 mb-1"><div class="text-xs muted" style="width:120px">${e.etapa}</div><div class="rr-funnel" style="width:${Math.round(e.n/max*100)}%"><span class="text-xs" style="color:#0E1D24;font-weight:700">${e.n}</span></div></div>`).join('');
+  }
+  // objectius RRHH
+  const ob=document.getElementById("rrObjectius");
+  if(ob){
+    ob.innerHTML=RRHH.objectius.map(o=>{const p=rrhhProgres(o);return `<div class="mb-2"><div class="flex justify-between text-xs mb-0.5"><span>${o.t}</span><span class="mono">${o.v}${o.direccio==="augmentar"&&o.meta>10?"":""} / ${o.meta}</span></div><div class="bar-track bg-white/10 h-2 rounded-full overflow-hidden"><div class="bar" style="width:${Math.round(p*100)}%;background:linear-gradient(90deg,#15D9CD,#29A7D5)"></div></div></div>`;}).join('');
+  }
+  // absències (resum) — segona fila d'indicadors
+  setText("rrAbs", RRHH.absencies[RRHH.absencies.length-1]+" h");
+  setText("rrRot", RRHH.rotacio.toLocaleString('ca').replace('.',',')+"%");
+  setText("rrCost", fmtEUR(RRHH.costContractacio));
+}
+window.renderRRHH=renderRRHH; window.RRHH=RRHH; window.rrhhProgres=rrhhProgres;
 window.renderOKR=renderOKR; window.okrDibuixaChart=okrDibuixaChart; window.OKR=OKR; window.okrProgres=okrProgres; window.okrEstat=okrEstat; window.okrObjectiuProgres=okrObjectiuProgres; window.okrProgresPct=okrProgresPct;
 function renderInsights(){
   document.getElementById("insTime").textContent="analitzat ara · "+insights.length+" troballes · "+SP.series.length+" mesos";
