@@ -237,7 +237,7 @@
 
 <aside class="side">
   <div class="logo"><img id="sideLogo" alt="Business Power" src=""/></div>
-  <button class="peerSw" id="peerSw" onclick="goPeer()" title="Canvia de mòdul"><span class="ic">⇄</span><span class="t">Accedeix a <b>SalesPower</b></span></button>
+  <button class="peerSw" id="peerSw" onclick="goPeer()" title="Canvia de mòdul" data-mode="erp"><span class="ic">⇄</span><span class="t"><span id="peerAlt">→ SalesPower</span></span></button>
   <div class="client-tag">
     <div class="tag">fet a mida per a</div>
     <div class="name" id="sideClient">—</div>
@@ -245,11 +245,13 @@
   <div class="health-mini" id="healthMini"></div>
   <nav class="nav" id="nav">
     <a data-v="dash" class="act"><span class="ic">🏠</span>Dashboard</a>
+    <a data-v="crm" data-mod="crm"><span class="ic">🤝</span>CRM &amp; Vendes</a>
     <a data-v="fact"><span class="ic">🧾</span>Facturació</a>
-    <a data-v="stock"><span class="ic">📦</span>Stock</a>
+    <a data-v="stock" data-mod="erp"><span class="ic">📦</span>Stock</a>
     <a data-v="cli"><span class="ic">👥</span>Clients</a>
-    <a data-v="prov"><span class="ic">🚚</span>Proveïdors</a>
+    <a data-v="prov" data-mod="erp"><span class="ic">🚚</span>Proveïdors</a>
     <a data-v="ins"><span class="ic">🧠</span>Insights IA <span class="ct" id="insCount"></span></a>
+    <a data-v="okr" data-mod="okr"><span class="ic">🎯</span>Objectius</a>
     <a data-v="autos"><span class="ic">⚡</span>Automatitzacions <span class="ct" id="autosCount"></span></a>
     <a data-v="report"><span class="ic">📄</span>Reporting <span class="ct" id="reportLock">🔒</span></a>
     <a data-v="cfg"><span class="ic">⚙️</span>Configuració</a>
@@ -262,8 +264,8 @@
   <!-- ======== DASHBOARD ======== -->
   <section class="view act" id="view-dash">
     <header class="flex items-center justify-between mb-3" style="margin-top:14px">
-      <div><div class="kicker mb-1">Business Power · Control operatiu</div>
-        <h1 class="serif" style="font-size:clamp(1.7rem,3.2vw,2.4rem);line-height:1.05;letter-spacing:-.02em;margin:0">Control de <span class="shimmer">negoci</span></h1></div>
+      <div><div class="kicker mb-1" id="mainKick">Business Power · Control operatiu</div>
+        <h1 class="serif" style="font-size:clamp(1.7rem,3.2vw,2.4rem);line-height:1.05;letter-spacing:-.02em;margin:0"><span id="mainTitle">BusinessPower</span></h1></div>
       <div class="flex items-center gap-3">
         <div class="text-right text-xs muted hidden sm:block" id="liveBadge"><span id="liveDot">●</span> <span id="liveTxt">dades estàtiques</span><br/>Actualitzat avui 10:35<br/>Tenant erp+crm · 2026</div>
         <button id="alertsBtn" onclick="openAlerts()" title="Alertes i resum" aria-label="Alertes">🔔<span class="badge" id="alertsCount">0</span></button>
@@ -479,6 +481,39 @@
       <button class="btn pro export-btn" onclick="exportReport('ppt')">⬇ PPT</button>
     </div>
   </section>
+
+
+  <!-- ======== OBJECTIUS / OKR (mòdul, accent llima) ======== -->
+  <section class="view" id="view-okr">
+    <div class="flex items-center justify-between mb-2">
+      <div><div class="kicker">Objectius · OKR</div>
+        <h1 class="serif text-4xl" style="margin:0">Objectius i resultats clau</h1></div>
+      <div class="bdg b-gold" id="okrPer">Q4</div>
+    </div>
+    <p class="text-sm muted mb-4 max-w-2xl">Seguiment dels objectius del trimestre i dels seus resultats clau (KRs). El color de cada estat surt de regles documentades: <b>en termini</b>, <b>endarrerit</b> o <b>en risc</b>.</p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+      <div class="card" style="border-top:3px solid #C7F542"><div class="kicker">Progrés agregat OKR</div><div class="text-3xl font-extrabold mt-1" id="okrProg">0%</div><div class="text-xs muted">mitjana ponderada de KRs vàlids</div></div>
+      <div class="card"><div class="kicker">Resultats clau actius</div><div class="text-3xl font-extrabold mt-1" id="okrKRs">0</div><div class="text-xs muted"><span id="okrKRmade">0</span> assolits</div></div>
+      <div class="card"><div class="kicker">Confiança de l'equip</div><div class="text-3xl font-extrabold mt-1" id="okrConf">0,0</div><div class="text-xs muted">mitjana de respostes del període (sobre 5)</div></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+      <div class="card lg:col-span-2"><div class="kicker mb-1">Evolució del resultat clau</div>
+        <div class="flex flex-wrap gap-2 mb-2" id="okrKRPick"></div>
+        <div id="okrChart" style="width:100%;height:300px"></div>
+        <div class="text-xs muted mt-2" id="okrChartNote">Línia real vs meta. Les línies discontínues són estimació.</div>
+      </div>
+      <div class="card" id="okrDestac"><div class="kicker mb-1">Objectiu destacat</div><div id="okrDestacBody"></div></div>
+    </div>
+    <div class="card">
+      <div class="kicker mb-2">Distribució d'estats (trimestre)</div>
+      <div id="okrDist" class="flex flex-wrap gap-4"></div>
+    </div>
+    <div class="card mt-4">
+      <div class="kicker mb-2">Tots els objectius</div>
+      <table class="tbl"><thead><tr><th>Objectiu</th><th>Àrea</th><th>Responsable</th><th>Progrés</th><th>Estat</th><th>KRs</th></tr></thead><tbody id="okrTable"></tbody></table>
+    </div>
+  </section>
+
 
   <!-- ======== CONFIGURACIÓ ======== -->
   <section class="view" id="view-cfg">
@@ -715,7 +750,7 @@ const ROBOT_SPAI="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5v
 /* imatge del robot escollit */ let robotImg = ROBOT_SPAI;
 function robotImgSrc(){ if(typeof cfg!=="undefined" && cfg.robot==="r1") return ROBOT_IMG_1; if(typeof cfg!=="undefined" && cfg.robot==="r2") return ROBOT_IMG_2; return ROBOT_SPAI; }
 const SP = window.__SP_DATA__ || {
-  tenant:"SolutionPartner", moduls:"erp,crm", any:2026,
+  tenant:"SolutionPartner", moduls:"erp,crm,okr", any:2026,
   /* factual per mes (10 mesos) perquè la IA calculi tendències REALS */
   series:[
     {m:"Gen",in:38,cob:33,des:22},{m:"Feb",in:41,cob:36,des:21},{m:"Mar",in:44,cob:39,des:23},
@@ -918,6 +953,7 @@ function go(v){
   document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("act",a.dataset.v===v));
   document.querySelectorAll(".rx").forEach(el=>el.classList.add("in"));
   window.scrollTo({top:0,behavior:"smooth"});
+  if(v==="okr") renderOKR();
   if(v==="ins") renderInsights();
   if(v==="autos") renderAutos();
   if(v==="report") renderReport();
@@ -929,6 +965,7 @@ document.getElementById("nav").addEventListener("click",e=>{const a=e.target.clo
 document.getElementById("insCount").textContent=insights.length;
 /* clics data-goto */
 document.addEventListener("click",e=>{const g=e.target.closest("[data-goto]");if(g){go(g.dataset.goto);}});
+document.getElementById("okrKRPick")&&document.getElementById("okrKRPick").addEventListener("click",e=>{const b=e.target.closest("[data-krid]");if(b){document.querySelectorAll("#okrKRPick .segBtn").forEach(x=>x.classList.remove("act"));b.classList.add("act");const o=OKR.objectives.find(o=>(o.krs||[]).some(k=>k.id===b.dataset.krid));const kr=o&&o.krs.find(k=>k.id===b.dataset.krid); if(kr)okrDibuixaChart({kr});}});
 
 /* ================= RENDER ================= */
 const ESTAT={ emesa:["Emesa","b-blue"],pagada:["Pagada","b-gold"],vencuda:["Vençuda","b-red"],
@@ -1601,6 +1638,165 @@ function setupReporting(){
   document.querySelectorAll("[data-per]").forEach(b=>b.addEventListener("click",()=>{_rpPer=b.dataset.per;renderReport();}));
 }
 window.exportReport=exportReport; window.renderReport=renderReport; window.reportData=reportData; window.activarReporting=activarReporting;
+// Motor OKR (llima) — dades i càlculs determinístics
+const OKR = {
+  periode: "Q4",
+  areas: ["Vendes","Operacions","Marqueting"],
+  objectives: [
+    { id:"o1", nom:"Incrementar la facturació recurrent", area:"Vendes", owner:"Lídia Ferrer", pes:0.35,
+      krs:[
+        { id:"o1k1", nom:"MRR net (MRR)", unitat:"€", inicial:18000, meta:30000, actual:26800, direccio:"augmentar",
+          pes:0.4, serie:[{m:"M1",v:18000},{m:"M2",v:22500},{m:"M3",v:26800}] },
+        { id:"o1k2", nom:"Clients re-currents actius", unitat:"clients", inicial:0, meta:12, actual:7, direccio:"augmentar",
+          pes:0.3, serie:[{m:"M1",v:1},{m:"M2",v:4},{m:"M3",v:7}] },
+        { id:"o1k3", nom:"Upsell a clients existents", unitat:"€", inicial:0, meta:20000, actual:9200, direccio:"augmentar",
+          pes:0.3, serie:[{m:"M1",v:0},{m:"M2",v:4000},{m:"M3",v:9200}] }
+      ]
+    },
+    { id:"o2", nom:"Reduir el cicle de cobrament", area:"Vendes", owner:"Marc Buigues", pes:0.25,
+      krs:[
+        { id:"o2k1", nom:"Dies de cobrament (DSO)", unitat:"dies", inicial:52, meta:35, actual:41, direccio:"reduir",
+          pes:0.5, serie:[{m:"M1",v:50},{m:"M2",v:46},{m:"M3",v:41}] },
+        { id:"o2k2", nom:"Factures al dia", unitat:"%", inicial:60, meta:90, actual:78, direccio:"augmentar",
+          pes:0.5, serie:[{m:"M1",v:62},{m:"M2",v:70},{m:"M3",v:78}] }
+      ]
+    },
+    { id:"o3", nom:"Automatitzar la operativa interna", area:"Operacions", owner:"Joana Vidal", pes:0.20,
+      krs:[
+        { id:"o3k1", nom:"Processos automatitzats", unitat:"proc.", inicial:0, meta:8, actual:4, direccio:"augmentar",
+          pes:0.6, serie:[{m:"M1",v:0},{m:"M2",v:2},{m:"M3",v:4}] },
+        { id:"o3k2", nom:"Hores estalviades / setmana", unitat:"h", inicial:0, meta:60, actual:22, direccio:"augmentar",
+          pes:0.4, serie:[{m:"M1",v:0},{m:"M2",v:10},{m:"M3",v:22}] }
+      ]
+    },
+    { id:"o4", nom:"Guanyar quota de mercat digital", area:"Marqueting", owner:"Pau Serra", pes:0.20,
+      krs:[
+        { id:"o4k1", nom:"Leads qualificats", unitat:"lead", inicial:0, meta:600, actual:210, direccio:"augmentar",
+          pes:0.5, serie:[{m:"M1",v:40},{m:"M2",v:120},{m:"M3",v:210}] },
+        { id:"o4k2", nom:"Trànsit orgànic mensual", unitat:"visites", inicial:0, meta:50000, actual:22100, direccio:"augmentar",
+          pes:0.5, serie:[{m:"M1",v:4100},{m:"M2",v:12000},{m:"M3",v:22100}] }
+      ]
+    }
+  ]
+};
+
+// progrés d'increment = (actual-inicial)/(meta-inicial); de reducció = (inicial-actual)/(inicial-meta). 0..1; meta=inicial → no calculable
+function okrProgres(kr){
+  if(kr.meta===kr.inicial) return null;
+  const num = kr.direccio==="reduir" ? (kr.inicial-kr.actual) : (kr.actual-kr.inicial);
+  const den = kr.direccio==="reduir" ? (kr.inicial-kr.meta) : (kr.meta-kr.inicial);
+  if(den===0) return null;
+  return Math.max(0, Math.min(1, num/den));
+}
+function okrProgresPct(kr){
+  const p=okrProgres(kr);
+  return p==null ? null : Math.round(p*100);
+}
+// estat per a una KR: en termini / endarrerit / en risc (regles documentades per període)
+function okrEstat(kr, pesat){
+  const p=pesat!==undefined?pesat:okrProgres(kr);
+  if(p==null) return {clau:"sense-dades", txt:"Sense dades", cls:"b-orange"};
+  if(p>=0.75) return {clau:"en-termini", txt:"En termini", cls:"b-green"};
+  if(p>=0.45) return {clau:"en-risc", txt:"En risc", cls:"b-gold"};
+  return {clau:"endarrerit", txt:"Endarrerit", cls:"b-red"};
+}
+// progrés agregat de l'objectiu: ponderat pels pesos dels krs, sobre els vàlids
+function okrObjectiuProgres(obj){
+  let num=0, den=0, valid=0;
+  (obj.krs||[]).forEach(kr=>{ const p=okrProgres(kr); if(p!=null){ num+=p*kr.pes; den+=kr.pes; valid++; } });
+  return { progre: den>0 ? Math.round(num/den*100) : null, valids: valid, tots: obj.krs.length };
+}
+// confiança de l'equip: mitjana de respostes (fixtures)
+const OKR_CONFIANCA = { mitjana:3.8, respostes:12 };
+
+function renderOKR(){
+  // KPIs
+  let agNum=0, agDen=0, totalKR=0, fets=0;
+  const perObj=[];
+  const totObj=OKR.objectives.length;
+  OKR.objectives.forEach(o=>{
+    const oa=okrObjectiuProgres(o);
+    oa.pct = oa.progre==null ? null : oa.progre;
+    perObj.push({o, oa});
+    if(oa.pct!=null){ agNum+=oa.pct*o.pes; agDen+=o.pes; }
+    (o.krs||[]).forEach(kr=>{ totalKR++; const p=okrProgres(kr); if(p!=null && p>=0.99) fets++; });
+  });
+  const ag = agDen>0 ? Math.round(agNum/agDen) : null;
+  setText('okrProg', ag==null?'—':ag+'%');
+  setText('okrKRs', totalKR);
+  setText('okrKRmade', fets);
+  setText('okrConf', OKR_CONFIANCA.mitjana.toLocaleString('ca').replace('.',','));
+
+  // llistat de KRs triables al gràfic
+  const pick=document.getElementById('okrKRPick');
+  if(pick){
+    let all=[];
+    OKR.objectives.forEach(o=>(o.krs||[]).forEach(kr=>all.push({o,kr})));
+    pick.innerHTML=all.map((x,i)=>`<button class="btn segBtn ${i===0?'act':''}" data-krid="${x.kr.id}" data-o="${x.o.id}">${x.o.nom.split(' ')[0]}: ${x.kr.nom.split(' (')[0]}</button>`).join('');
+    const e=document.getElementById("okrChart");
+    if(e && window.echarts) okrDibuixaChart(all[0]);
+  }
+
+  // objectiu destacat (el de més pes)
+  const dest=OKR.objectives[0];
+  const db=document.getElementById('okrDestacBody');
+  if(db){
+    const oa=okrObjectiuProgres(dest);
+    db.innerHTML=`<div class="font-bold">${dest.nom}</div>
+      <div class="text-xs muted mt-1">${dest.area} · Responsable: ${dest.owner}</div>
+      <div class="flex items-end gap-2 mt-3"><div class="text-3xl font-extrabold" style="color:#C7F542">${oa.progre==null?'—':oa.progre+'%'}</div>
+      <div class="text-xs muted mb-1">progrés agregat</div></div>
+      <div class="bar-track bg-white/10 h-2.5 rounded-full overflow-hidden mt-2"><div class="bar" style="width:${oa.progre==null?0:oa.progre}%;background:linear-gradient(90deg,#C7F542,#8ee000)"></div></div>
+      <div class="text-xs muted mt-3">KRs assolits: ${oa.valids==oa.tots?'':dest.krs.filter(k=>okrProgres(k)!=null&&okrProgres(k)>=0.99).length+' / '+oa.tots}</div>`;
+  }
+
+  // distribució d'estats
+  const dist=document.getElementById('okrDist');
+  if(dist){
+    const comp={ "en-termini":0, "en-risc":0, "endarrerit":0, "sense-dades":0 };
+    OKR.objectives.forEach(o=>(o.krs||[]).forEach(kr=>{ const e=okrEstat(kr); comp[e.clau]++; }));
+    dist.innerHTML=Object.entries(comp).map(([k,n])=>{ const label={'en-termini':['En termini','#4caf50'],'en-risc':['En risc','#e7c47d'],'endarrerit':['Endarrerit','#c75450'],'sense-dades':['Sense dades','#64748b']}[k];
+      return `<div class="flex items-center gap-2"><span style="width:12px;height:12px;border-radius:4px;background:${label[1]}"></span>
+        <span class="text-sm">${label[0]}</span><b class="text-sm">${n}</b><span class="text-xs muted">de ${totalKR}</span></div>`; }).join('');
+  }
+
+  // taula de tots els objectius
+  const tb=document.getElementById('okrTable');
+  if(tb){
+    tb.innerHTML=OKR.objectives.map(o=>{
+      const oa=okrObjectiuProgres(o);
+      const e=o._estat||(oa.progre==null?{txt:'Sense dades',cls:'b-orange'}:okrEstat(null,oa.progre/100));
+      return `<tr><td class="font-bold">${o.nom}</td><td>${o.area}</td><td>${o.owner}</td>
+        <td><div class="flex items-center gap-2"><div class="bar-track bg-white/10 h-2 rounded-full overflow-hidden" style="width:90px"><div class="bar" style="width:${oa.progre==null?0:oa.progre}%;background:linear-gradient(90deg,#C7F542,#8ee000)"></div></div><span class="mono text-xs">${oa.progre==null?'—':oa.progre+'%'}</span></div></td>
+        <td><span class="bdg ${e.cls}">${e.txt}</span></td><td>${oa.valids}/${oa.tots}</td></tr>`;
+    }).join('');
+  }
+}
+function okrDibuixaChart(sel){
+  const e=document.getElementById("okrChart");
+  if(!e||!window.echarts) return;
+  const chart=echarts.init(e);
+  const serie=sel.kr.serie||[];
+  const labels=serie.map(s=>s.m);
+  const reals=serie.map(s=>s.v);
+  const meta=sel.kr.meta;
+  chart.setOption({
+    backgroundColor:'transparent',
+    tooltip:{ trigger:'axis', valueFormatter:(v)=> (sel.kr.unitat==='€'?(v).toLocaleString('ca',{style:'currency',currency:'EUR'}) : v) },
+    legend:{ data:['Real','Meta'], textStyle:{color:'#A8B3BF'} },
+    grid:{ left:70, right:24, top:36, bottom:30 },
+    xAxis:{ type:'category', data:labels, axisLabel:{color:'#A8B3BF'} },
+    yAxis:{ type:'value', name:sel.kr.unitat, nameTextStyle:{color:'#A8B3BF'}, axisLabel:{color:'#A8B3BF'} },
+    series:[
+      { name:'Real', type:'line', smooth:false, data:reals, symbolSize:7, lineStyle:{color:'#C7F542',width:2.5}, itemStyle:{color:'#C7F542'} },
+      { name:'Meta', type:'line', data:labels.map(()=>meta), lineStyle:{color:'#8ee000',width:2,type:'dashed'}, itemStyle:{color:'#8ee000'}, symbol:'none' }
+    ]
+  });
+  const note=document.getElementById("okrChartNote");
+  if(note) note.textContent=`${sel.nom} · objectiu ${sel.meta} ${sel.unitat} · ${OKR.periode}. Les línies discontínues són la meta (no estimació).`;
+}
+function setText(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+window.renderOKR=renderOKR; window.okrDibuixaChart=okrDibuixaChart; window.OKR=OKR; window.okrProgres=okrProgres; window.okrEstat=okrEstat; window.okrObjectiuProgres=okrObjectiuProgres; window.okrProgresPct=okrProgresPct;
 function renderInsights(){
   document.getElementById("insTime").textContent="analitzat ara · "+insights.length+" troballes · "+SP.series.length+" mesos";
   const kpis=`<div class="card"><div class="kicker mb-1">Índex de salut</div><div class="text-4xl font-extrabold gold">${saludVal}<span class="text-lg">/100</span></div>
@@ -1972,7 +2168,7 @@ function applyModules(){
   /* Mini-gràfic de tendència al Dashboard (targeta top dret) */
   if(!cfg.ia.iaSpark){ hide("#view-dash #sparkCard, #view-dash #tendSub"); }
 }
-renderCfg();applyModules();applyLogo();setupDataInputs();applyRobot();renderModules();setupNotifyInputs();applyPeerButton();setMicSupport();setupPeerUrlInput();attachRobotBtns();setupReporting();
+renderCfg();applyModules();applyLogo();setupDataInputs();applyRobot();renderModules();setupNotifyInputs();applyPeerButton();setMicSupport();setupPeerUrlInput();attachRobotBtns();setupReporting();aplicarModuls();
 /* ================= ASSISTENT D'IA (chat connectat al baïós del tenant) ================= */
 /* El baiós real s'exposa via `/v1/execute-intent` / `/v1/invoke-tool` (HTTP local del tenant).
    Si tenim un endpoint el cridem; si no, contestem amb un motor local derivat del dataset
@@ -2290,23 +2486,75 @@ function applyPeerButton(){
   }
 }
 /* navega al dashboard del producte germà (mateix directori, sufix tolerant: -dashboard.html, .html, etc.) */
+
+/* -------- TERRENY: titol i navegacio per moduls contractats del tenant -------- */
+function aplicarModuls(){
+  const mods=(typeof SP!=="undefined"&&SP.moduls)||cfg.moduls||"";
+  const te=(m)=>new RegExp("\\b"+m+"\\b").test(mods);
+  const crm=te("crm"), erp=te("erp"), okr=te("okr");
+  const dos = crm&&erp;
+  // mode: "both" per defecte (tots els moduls al menú). El botó ⇄ alterna crm/erp per enfocar-hi.
+  let mode = localStorage.getItem("sp_mode") || "";
+  if(["crm","erp","both"].indexOf(mode)<0) mode = dos ? "both" : (crm?"crm":(erp?"erp":"both"));
+  // títol
+  const nom = dos ? (mode==="both"?"SalesPower & BusinessPower":(mode==="crm"?"SalesPower":"BusinessPower"))
+                 : (crm?"SalesPower":(erp?"BusinessPower":"Objectius"));
+  const els=document.querySelectorAll("#mainTitle");
+  els.forEach(el=>el.textContent=nom);
+  const kick=document.getElementById("mainKick");
+  if(kick){
+    kick.textContent = dos
+      ? (mode==="both"?"Plataforma comercial i operació · SalesPower + BusinessPower"
+        :(mode==="crm"?"SalesPower · Gestió de clients (⇄ a BusinessPower)":"Business Power · Control operatiu (⇄ a SalesPower)"))
+      : (crm?"SalesPower · Gestió de clients" : (erp?"Business Power · Control operatiu":"Objectius i resultats clau"));
+  }
+  // nav: mostra l'ítem del modul contractat; si mode crm/erp i l'ítem és de l'altre modul central, l'amaga
+  document.querySelectorAll("#nav a[data-mod]").forEach(a=>{
+    const mod=a.dataset.mod;
+    let vis=false;
+    if(mod==="crm") vis = crm && (mode==="both"||mode==="crm");
+    else if(mod==="erp") vis = erp && (mode==="both"||mode==="erp");
+    else vis = te(mod); // okr i d'altres: sempre que contractat
+    a.style.display = vis ? "" : "none";
+  });
+  const peer=document.getElementById("peerSw");
+  if(peer){ peer.style.display = dos ? "" : "none"; if(peer.dataset) peer.dataset.mode=mode; }
+  const alt=document.getElementById("peerAlt");
+  if(alt){ alt.textContent = dos ? (mode==="crm"?"→ BusinessPower":(mode==="erp"?"→ SalesPower":"Mode · tots")) : ""; }
+  if(window.applyPeerButton) try{ applyPeerButton(); }catch(e){}
+}
+window.aplicarModuls=aplicarModuls;
 function goPeer(){
-  // 1) URL explícita desada a Configuració
   const saved=(location.protocol!=="file:") ? (localStorage.getItem("sp_peer_url")||cfg.peerUrl||"") : "";
   if(saved){ location.href=saved; return; }
-  // 2) fallback: autodetecció tolerant al nom de fitxer / directori
+  // Si el tenant té ambdós mòduls, alterna el mode vist DINS del mateix entorn (adéu redirects).
+  const mods=(typeof SP!=="undefined"&&SP.moduls)||cfg.moduls||"";
+  const te=(m)=>new RegExp("\\b"+m+"\\b").test(mods);
+  const crm=te("crm"), erp=te("erp");
+  if(crm&&erp){
+    // mode actual: quin subset està vist. Toggle càrrega del mòdul actiu.
+    const alt=document.getElementById("peerAlt");
+    if(alt){
+      const mode=alt.dataset.mode||"crm";
+      localStorage.setItem("sp_mode", mode==="crm"?"erp":"crm");
+      aplicarModuls();
+      go("dash");
+    }
+    return;
+  }
+  // Només un mòdul contractat: navega al producte germà (si existeix) o no fa res.
   const path=location.pathname.split("/").pop()||"";
   const dir=location.pathname.slice(0, location.pathname.length-path.length)||"./";
   const esErp = /(?:^|\/)erp(?:\/|$)/.test(location.pathname) || /^businesspower/i.test(path);
   const pBase = /^(salespower|businesspower)/i.exec(path);
   const aqui  = pBase ? pBase[1].toLowerCase() : (esErp ? "businesspower" : "salespower");
   const germa = aqui==="businesspower" ? "salespower" : "businesspower";
-  const sufix = pBase ? path.slice(pBase[0].length) : "-dashboard.html"; // conserva -dashboard.html, .html o ""
+  const sufix = pBase ? path.slice(pBase[0].length) : "-dashboard.html";
   let dest = dir + germa + sufix;
   if(!pBase) dest = dir + (esErp ? "salespower" : "businesspower") + "-dashboard.html";
-  const finalDest = (typeof PEER_URL!=="undefined"&&PEER_URL) ? PEER_URL : dest;
-  location.href = finalDest;
+  location.href = dest;
 }
+window.peerToggle=function(mode){ localStorage.setItem("sp_mode",mode); aplicarModuls(); go("dash"); };
 const PEER_URL = "";
 /* Transcriptor de veu a text (Web Speech API, només Chrome/Edge); si no hi ha suport, desactiva el botó */
 let _rec=null;
