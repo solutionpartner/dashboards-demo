@@ -264,6 +264,7 @@
     <a data-v="autos"><span class="ic">⚡</span>Automatitzacions <span class="ct" id="autosCount"></span></a>
     <a data-v="report"><span class="ic">📄</span>Reporting <span class="ct" id="reportLock">🔒</span></a>
     <a data-v="rrhh" data-mod="rrhh"><span class="ic">👥</span>Equip</a>
+    <a data-v="fin" data-mod="fin"><span class="ic">💶</span>Finances</a>
     <a data-v="cfg"><span class="ic">⚙️</span>Configuració</a>
   </nav>
 </aside>
@@ -565,6 +566,35 @@
   </section>
 
 
+
+  <!-- ======== FINANCES (mòdul, accent violeta) ======== -->
+  <section class="view" id="view-fin" style="background:linear-gradient(135deg, rgba(139,92,246,.08), rgba(0,0,0,0) 60%); border-top:2px solid rgba(139,92,246,.5);">
+    <div class="flex items-center justify-between mb-2">
+      <div><div class="kicker" style="color:#8B5CF6">Finances · Tresoreria i rendiment</div>
+        <h1 class="serif text-4xl" style="margin:0">Finances</h1></div>
+      <div class="bdg b-gold">Q3 2026</div>
+    </div>
+    <p class="text-sm muted mb-4 max-w-2xl">Visió financera de meritació i caixa per separat: <b>no es compta factura i cobrament com dos ingressos</b>, i el flux de caixa surt de cobraments − pagaments.</p>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      <div class="card" style="border-top:3px solid #8B5CF6"><div class="kicker">Ingressos (període)</div><div class="text-3xl font-extrabold mt-1" id="finIng">—</div><div class="text-xs muted">meritació</div></div>
+      <div class="card"><div class="kicker">Despeses (període)</div><div class="text-3xl font-extrabold mt-1" id="finDes">—</div><div class="text-xs muted">operatives</div></div>
+      <div class="card"><div class="kicker">Benefici operatiu</div><div class="text-3xl font-extrabold mt-1" id="finBen" style="color:#8B5CF6">—</div><div class="text-xs muted">ingressos − despeses</div></div>
+      <div class="card"><div class="kicker">Marge operatiu</div><div class="text-3xl font-extrabold mt-1" id="finMarge">—</div><div class="text-xs muted">benefici / ingressos</div></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+      <div class="card lg:col-span-2"><div class="kicker mb-1">Flux de caixa net (mes)</div><div id="finFluxChart" style="width:100%;height:220px"></div></div>
+      <div class="card"><div class="kicker mb-1">Compliment d'objectiu d'ingressos</div><div class="relative flex justify-center my-3" id="finGoal"></div>
+        <div class="text-center text-xs muted">objectiu del període: <b id="finMeta" style="color:#8B5CF6">200.000 €</b></div></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+      <div class="card lg:col-span-2"><div class="kicker mb-2">Rendiment per projecte</div>
+        <table class="tbl"><thead><tr><th>Projecte</th><th class="text-right">Ingressos</th><th class="text-right">Costos</th><th class="text-right">Marge €</th><th class="text-right">Marge %</th><th>Estat</th></tr></thead><tbody id="finTaula"></tbody></table></div>
+      <div class="card"><div class="kicker mb-1">Tresoreria</div><div class="text-3xl font-extrabold mt-1" id="finSaldo">—</div><div class="text-xs muted mb-3">saldo disponible</div>
+        <div class="kicker mb-2">Venciments propers</div><div id="finVenc"></div></div>
+    </div>
+  </section>
+
+
   <!-- ======== CONFIGURACIÓ ======== -->
   <section class="view" id="view-cfg">
     <div class="flex items-center justify-between mb-6">
@@ -800,7 +830,7 @@ const ROBOT_SPAI="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5v
 /* imatge del robot escollit */ let robotImg = ROBOT_SPAI;
 function robotImgSrc(){ if(typeof cfg!=="undefined" && cfg.robot==="r1") return ROBOT_IMG_1; if(typeof cfg!=="undefined" && cfg.robot==="r2") return ROBOT_IMG_2; return ROBOT_SPAI; }
 const SP = window.__SP_DATA__ || {
-  tenant:"SolutionPartner", moduls:"erp,crm,okr,rrhh", any:2026,
+  tenant:"SolutionPartner", moduls:"erp,crm,okr,rrhh,fin", any:2026,
   /* factual per mes (10 mesos) perquè la IA calculi tendències REALS */
   series:[
     {m:"Gen",in:38,cob:33,des:22},{m:"Feb",in:41,cob:36,des:21},{m:"Mar",in:44,cob:39,des:23},
@@ -1005,6 +1035,7 @@ function go(v){
   window.scrollTo({top:0,behavior:"smooth"});
   if(v==="okr") renderOKR();
   if(v==="rrhh") renderRRHH();
+  if(v==="fin") renderFinances();
   if(v==="ins") renderInsights();
   if(v==="autos") renderAutos();
   if(v==="report") renderReport();
@@ -2011,6 +2042,90 @@ function renderRRHH(){
   setText("rrCost", fmtEUR(RRHH.costContractacio));
 }
 window.renderRRHH=renderRRHH; window.RRHH=RRHH; window.rrhhProgres=rrhhProgres;
+/* ============== MÒDUL FINANCES (accent violeta #8B5CF6 + magenta #C026D3) ==============
+   Segons document SPAI §6: ingressos/despeses (meritació), benefici operatiu, marge,
+   flux de caixa net per període, compliment d'objectiu, i taula de projectes.
+   Regles: no es compta factura + cobrament com dos ingressos; marge operatiu =
+   benefici/ingressos·100; flux net = cobraments − pagaments. Dades demo que concilien. */
+
+const FIN = {
+  periode: "Q3 2026",
+  ingressos: 184500,     // meritació
+  despeses: 112800,      // meritació operativa
+  metaIngressos: 200000, // objectiu del període
+  /* flux de caixa mensual (cobraments - pagaments), 9 mesos */
+  flux: [8200, 11400, 9600, 13800, 12200, 15100, 17400, 16800, 18900],
+  /* tresoreria */
+  saldo: 42680,
+  /* dashboard per projecte: {projecte, ingressos, costos, estat} */
+  projectes: [
+    { p:"Implantació ERP Client A", ing:52000, cost:31000, estat:"actiu" },
+    { p:"Automatitzacions n8n Client B", ing:28500, cost:12400, estat:"actiu" },
+    { p:"Web + SEO Client C", ing:19800, cost:9100, estat:"fet" },
+    { p:"Consultoria Client D", ing:15000, cost:7800, estat:"actiu" },
+    { p:"Manteniment anual Client E", ing:9800, cost:3400, estat:"fet" }
+  ],
+  /* alertes i venciments */
+  venciments: [
+    { t:"Factura F-0142 (Client A)", import:12400, tipus:"cobrament", data:"28/10" },
+    { t:"Factura F-0151 (Client C)", import:4300, tipus:"cobrament", data:"02/11" },
+    { t:"Proveïdor hosting (Client B)", import:2100, tipus:"pagament", data:"31/10" },
+    { t:"Nòmines octubre", import:18400, tipus:"pagament", data:"30/10" }
+  ]
+};
+
+function finMarge(ing, des){ return ing>0 ? Math.round((ing-des)/ing*1000)/10 : null; }
+
+function renderFinances(){
+  const ing=FIN.ingressos, des=FIN.despeses;
+  const ben = ing - des;
+  const marge = finMarge(ing, des);
+  setText("finIng", fmtEUR(ing));
+  setText("finDes", fmtEUR(des));
+  setText("finBen", fmtEUR(ben));
+  setText("finMarge", (marge==null?"—":marge+"%"));
+
+  // compliment d'objectiu (donut SVG)
+  const comp = Math.round(ing/FIN.metaIngressos*100);
+  const don=document.getElementById("finGoal");
+  if(don){
+    const circ=Math.round(276.5 * Math.min(1, comp/100));
+    don.innerHTML = `<svg viewBox="0 0 100 100" style="width:150px;height:150px;transform:rotate(-90deg)">
+      <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
+      <circle cx="50" cy="50" r="44" fill="none" stroke="url(#fg)" stroke-linecap="round" stroke-width="12" stroke-dasharray="${circ} 276.5"/>
+      <defs><linearGradient id="fg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#8B5CF6"/><stop offset="100%" stop-color="#C026D3"/></linearGradient></defs></svg>
+      <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-3xl font-extrabold" style="color:#8B5CF6">${comp}%</span><span class="text-[10px] muted">d'objectiu</span></div>`;
+  }
+
+  // flux de caixa net (ECharts línia/barra)
+  const fc=document.getElementById("finFluxChart");
+  if(fc && window.echarts){
+    const ch=echarts.init(fc);
+    ch.setOption({
+      backgroundColor:"transparent",
+      tooltip:{trigger:"axis"},
+      grid:{left:50,right:14,top:20,bottom:24},
+      xAxis:{type:"category",data:["G","F","M","A","Mg","Jn","Jl","Ag","S"],axisLabel:{color:"#A8B3BF"}},
+      yAxis:{type:"value",name:"€",nameTextStyle:{color:"#A8B3BF"},axisLabel:{color:"#A8B3BF",formatter:v=>(v/1000)+"k"}},
+      series:[{type:"line",data:FIN.flux,lineStyle:{color:"#8B5CF6",width:2.5},itemStyle:{color:"#8B5CF6"},areaStyle:{color:"rgba(139,92,246,.15)"},symbolSize:6}]
+    });
+  }
+
+  // taula de projectes
+  const tb=document.getElementById("finTaula");
+  if(tb){
+    tb.innerHTML = FIN.projectes.map(p=>{ const m=finMarge(p.ing,p.cost); const e=p.estat==="fet"?"b-blue":"b-gold";
+      return `<tr><td class="font-bold">${p.p}</td><td class="text-right mono">${fmtEUR(p.ing)}</td><td class="text-right mono">${fmtEUR(p.cost)}</td><td class="text-right mono">${fmtEUR(p.ing-p.cost)}</td><td class="text-right mono">${m==null?"—":m+"%"}</td><td><span class="bdg ${e}">${p.estat}</span></td></tr>`; }).join('');
+  }
+
+  // tresoreria + venciments
+  setText("finSaldo", fmtEUR(FIN.saldo));
+  const ve=document.getElementById("finVenc");
+  if(ve){
+    ve.innerHTML=FIN.venciments.map(v=>`<div class="flex items-center justify-between py-1.5" style="border-bottom:1px solid var(--row-line)"><div><div class="text-sm">${v.t}</div><div class="text-xs muted">${v.data}</div></div><span class="bdg ${v.tipus==="cobrament"?"b-green":"b-orange"}">${v.tipus==="cobrament"?"+":""}${fmtEUR(v.import)}</span></div>`).join('');
+  }
+}
+window.renderFinances=renderFinances; window.FIN=FIN; window.finMarge=finMarge;
 window.renderOKR=renderOKR; window.okrDibuixaChart=okrDibuixaChart; window.OKR=OKR; window.okrProgres=okrProgres; window.okrEstat=okrEstat; window.okrObjectiuProgres=okrObjectiuProgres; window.okrProgresPct=okrProgresPct;
 function renderInsights(){
   document.getElementById("insTime").textContent="analitzat ara · "+insights.length+" troballes · "+SP.series.length+" mesos";
