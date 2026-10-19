@@ -532,7 +532,7 @@
         <span class="text-xs muted" id="okrQNote">Q1–Q3 són històric tancat · Q4 és el trimestre en curs.</span>
       </div>
     <div class="flex items-center justify-between mb-2">
-      <div><div class="kicker okr-kicker">OKR · Objectives Key Results</div>
+      <div><div class="kicker okr-kicker">OKR · Objectius Key Results</div>
         <h1 class="serif text-4xl" style="margin:0; color:#C7F542">Objectius i resultats clau</h1></div>
       <div class="bdg b-gold" id="okrPer">Q4</div>
     </div>
@@ -1864,18 +1864,18 @@ function renderOKR(){
     const progressPct = oa.progre==null ? null : oa.progre;
     db.innerHTML=`<div class="flex items-start gap-2.5" style="display:flex;align-items:flex-start;gap:10px">
         <span class="okr-icona" style="flex-shrink:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:rgba(199,234,69,.12);border-radius:8px;font-size:16px">🎯</span>
-        <div style="min-width:0"><div class="okr-petita" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#AAB2A5">Objective</div>
+        <div style="min-width:0"><div class="okr-petita" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#AAB2A5">Objectiu</div>
         <div class="okr-nom" style="font-size:14px;font-weight:700;color:#F3F5EF">${dest.nom}</div></div>
       </div>
       <div class="okr-divisor" style="display:flex;gap:0;margin-top:12px;border-top:1px solid rgba(255,255,255,.06)">
         <div style="flex:1;padding:12px 12px 4px 0">
-          <div class="okr-petita" style="font-size:11px;color:#AAB2A5">Progress</div>
+          <div class="okr-petita" style="font-size:11px;color:#AAB2A5">Progrés</div>
           <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:26px;font-weight:800;color:#F3F5EF">${progressPct==null?'—':progressPct+"%"}</span>
           <span class="okr-pindola" style="font-size:11px;font-weight:700;color:#0B1D32;background:#80C900;padding:1px 8px;border-radius:999px">+${vari}%</span></div>
         </div>
         <div style="width:1px;background:rgba(255,255,255,.08);margin:12px 0 4px"></div>
         <div style="flex:1;padding:12px 0 4px 12px">
-          <div class="okr-petita" style="font-size:11px;color:#AAB2A5">Key Results Met</div>
+          <div class="okr-petita" style="font-size:11px;color:#AAB2A5">Resultats clau assolits</div>
           <div style="display:flex;align-items:center;gap:6px"><span style="font-size:26px;font-weight:800;color:#C7EA45">${fets}/${oa.tots}</span>
           <span class="okr-check" style="width:18px;height:18px;border-radius:50%;background:#C7EA45;color:#0B1D32;display:flex;align-items:center;justify-content:center;font-size:11px">✓</span></div>
         </div>
@@ -1887,9 +1887,9 @@ function renderOKR(){
   const circ=document.getElementById('okrDistCircles');
   if(circ){
     const d = OKR_DIST || { onTrack:10, behind:6, atRisk:4, total:20 };
-    const st=[ {k:"onTrack",n:d.onTrack,label:"ON TRACK",c:"#80C900"},
-               {k:"behind",n:d.behind,label:"BEHIND",c:"#E4F644"},
-               {k:"atRisk",n:d.atRisk,label:"AT RISK",c:"#C8AC32"} ];
+    const st=[ {k:"onTrack",n:d.onTrack,label:"EN TERMINI",c:"#80C900"},
+               {k:"behind",n:d.behind,label:"ENDARRERIT",c:"#E4F644"},
+               {k:"atRisk",n:d.atRisk,label:"EN RISC",c:"#C8AC32"} ];
     // radi proporcional a arrel quadrada del recompte
     const maxN = Math.max(d.onTrack,d.behind,d.atRisk,1);
     const R=(n)=> 12 + 22*Math.sqrt(n/maxN); // 12..34
