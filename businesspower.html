@@ -77,6 +77,10 @@
   .nav a[data-v="okr"].act{ color:#C7F542; border-left-color:#C7F542; background:rgba(199,245,66,.10); }
   .okr-band{ border-top:3px solid #C7F542; }
   .okr-kicker{ color:#C7F542; font-weight:800; letter-spacing:.08em; }
+  /* Tokens aïllats dels widgets OKR (mode fosc de la captura) — no afecten la resta */
+  .okr-widget-dark{ background:#202420; border:1px solid rgba(255,255,255,.06); }
+  .okr-petita{ font-size:11px; color:#AAB2A5; }
+  .okr-bombolla{ cursor:pointer; } .okr-bombolla:focus{ outline:2px solid #C7EA45; }
   .health-mini{ margin:14px 20px; }
   .logo{ display:flex; align-items:center; justify-content:center; padding:4px 20px 0; }
   .logo img{ max-width:195px; height:auto; display:block; }
@@ -538,17 +542,18 @@
       <div class="card"><div class="kicker">Resultats clau actius</div><div class="text-3xl font-extrabold mt-1" id="okrKRs">0</div><div class="text-xs muted"><span id="okrKRmade">0</span> assolits</div></div>
       <div class="card"><div class="kicker">Confiança de l'equip</div><div class="text-3xl font-extrabold mt-1" id="okrConf">0,0</div><div class="text-xs muted">mitjana de respostes del període (sobre 5)</div></div>
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
-      <div class="card lg:col-span-2"><div class="kicker mb-1">Evolució del resultat clau</div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5" style="align-items:stretch">
+      <div class="card lg:col-span-2 okr-widget-dark"><div class="flex items-center justify-between mb-1">
+        <div class="kicker" style="color:#C7EA45">Progrés del resultat clau vs fites</div>
+        <span class="text-xs muted" id="okrWidgetScope">KR seleccionat · aquest gràfic mostra un sol KR</span></div>
         <div class="flex flex-wrap gap-2 mb-2" id="okrKRPick"></div>
         <div id="okrChart" style="width:100%;height:300px"></div>
-        <div class="text-xs mt-2" id="okrChartNote" style="color:#C7F542">Línia real vs meta. Les línies discontínues són estimació.</div>
+        <div class="text-xs mt-2" id="okrChartNote" style="color:#C7EA45">Línia real (sòlida) · meta (discontínua) · projecció (puntejada, marcada com a estimació).</div>
       </div>
-      <div class="card" id="okrDestac"><div class="kicker mb-1">Objectiu destacat</div><div id="okrDestacBody"></div></div>
-    </div>
-    <div class="card">
-      <div class="kicker mb-2">Distribució d'estats (trimestre)</div>
-      <div id="okrDist" class="flex flex-wrap gap-4"></div>
+      <div class="flex flex-col gap-4">
+        <div class="card okr-widget-dark" id="okrDestac"><div class="kicker mb-1">Objectiu destacat</div><div id="okrDestacBody"></div></div>
+        <div class="card okr-widget-dark" style="flex:1"><div class="kicker mb-1" style="color:#C7EA45">Distribució d'estats</div><div id="okrDist"><div id="okrDistCircles"></div><div id="okrDistLegend" class="mt-2"></div><div id="okrDistScope" class="text-xs mt-2" style="color:#AAB2A5"></div></div></div>
+      </div>
     </div>
     <div class="card mt-4">
       <div class="kicker mb-2">Tots els objectius</div>
@@ -1815,6 +1820,10 @@ function okrObjectiuProgres(obj){
 }
 // confiança de l'equip: mitjana de respostes (fixtures)
 const OKR_CONFIANCA = { mitjana:3.8, respostes:12 };
+// distribució d'estats (demo, coherents amb 20 KR: 10/6/4 = 50%·30%·20% com el doc)
+const OKR_DIST = { onTrack:10, behind:6, atRisk:4, total:20 };
+const OKR_DEMO_CHANGE = 2.5;   // variació en punts percentuals (demo, marcada a la targeta)
+const OKR_DIST_SCOPE = "Àmbit: tots els KR de l'àrea · dades demo";
 
 function renderOKR(){
   // KPIs
@@ -1849,22 +1858,61 @@ function renderOKR(){
   const db=document.getElementById('okrDestacBody');
   if(db){
     const oa=okrObjectiuProgres(dest);
-    db.innerHTML=`<div class="font-bold">${dest.nom}</div>
-      <div class="text-xs muted mt-1">${dest.area} · Responsable: ${dest.owner}</div>
-      <div class="flex items-end gap-2 mt-3"><div class="text-3xl font-extrabold" style="color:#C7F542">${oa.progre==null?'—':oa.progre+'%'}</div>
-      <div class="text-xs muted mb-1">progrés agregat</div></div>
-      <div class="bar-track bg-white/10 h-2.5 rounded-full overflow-hidden mt-2"><div class="bar" style="width:${oa.progre==null?0:oa.progre}%;background:linear-gradient(90deg,#C7F542,#8ee000)"></div></div>
-      <div class="text-xs muted mt-3">KRs assolits: ${oa.valids==oa.tots?'':dest.krs.filter(k=>okrProgres(k)!=null&&okrProgres(k)>=0.99).length+' / '+oa.tots}</div>`;
+    const fets=dest.krs.filter(k=>okrProgres(k)!=null&&okrProgres(k)>=0.99).length;
+    // variació vs període comparable (demo, marcada): canvi en punts percentuals
+    const vari=dest._canviPunts || (typeof OKR_DEMO_CHANGE!=="undefined" ? OKR_DEMO_CHANGE : 2.5);
+    const progressPct = oa.progre==null ? null : oa.progre;
+    db.innerHTML=`<div class="flex items-start gap-2.5" style="display:flex;align-items:flex-start;gap:10px">
+        <span class="okr-icona" style="flex-shrink:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:rgba(199,234,69,.12);border-radius:8px;font-size:16px">🎯</span>
+        <div style="min-width:0"><div class="okr-petita" style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#AAB2A5">Objective</div>
+        <div class="okr-nom" style="font-size:14px;font-weight:700;color:#F3F5EF">${dest.nom}</div></div>
+      </div>
+      <div class="okr-divisor" style="display:flex;gap:0;margin-top:12px;border-top:1px solid rgba(255,255,255,.06)">
+        <div style="flex:1;padding:12px 12px 4px 0">
+          <div class="okr-petita" style="font-size:11px;color:#AAB2A5">Progress</div>
+          <div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:26px;font-weight:800;color:#F3F5EF">${progressPct==null?'—':progressPct+"%"}</span>
+          <span class="okr-pindola" style="font-size:11px;font-weight:700;color:#0B1D32;background:#80C900;padding:1px 8px;border-radius:999px">+${vari}%</span></div>
+        </div>
+        <div style="width:1px;background:rgba(255,255,255,.08);margin:12px 0 4px"></div>
+        <div style="flex:1;padding:12px 0 4px 12px">
+          <div class="okr-petita" style="font-size:11px;color:#AAB2A5">Key Results Met</div>
+          <div style="display:flex;align-items:center;gap:6px"><span style="font-size:26px;font-weight:800;color:#C7EA45">${fets}/${oa.tots}</span>
+          <span class="okr-check" style="width:18px;height:18px;border-radius:50%;background:#C7EA45;color:#0B1D32;display:flex;align-items:center;justify-content:center;font-size:11px">✓</span></div>
+        </div>
+      </div>`;
   }
 
   // distribució d'estats
-  const dist=document.getElementById('okrDist');
-  if(dist){
-    const comp={ "en-termini":0, "en-risc":0, "endarrerit":0, "sense-dades":0 };
-    OKR.objectives.forEach(o=>(o.krs||[]).forEach(kr=>{ const e=okrEstat(kr); comp[e.clau]++; }));
-    dist.innerHTML=Object.entries(comp).map(([k,n])=>{ const label={'en-termini':['En termini','#4caf50'],'en-risc':['En risc','#e7c47d'],'endarrerit':['Endarrerit','#c75450'],'sense-dades':['Sense dades','#64748b']}[k];
-      return `<div class="flex items-center gap-2"><span style="width:12px;height:12px;border-radius:4px;background:${label[1]}"></span>
-        <span class="text-sm">${label[0]}</span><b class="text-sm">${n}</b><span class="text-xs muted">de ${totalKR}</span></div>`; }).join('');
+  // distribució d'estats (demo) en cercles superposats — radi proporcional a sqrt(n)
+  const circ=document.getElementById('okrDistCircles');
+  if(circ){
+    const d = OKR_DIST || { onTrack:10, behind:6, atRisk:4, total:20 };
+    const st=[ {k:"onTrack",n:d.onTrack,label:"ON TRACK",c:"#80C900"},
+               {k:"behind",n:d.behind,label:"BEHIND",c:"#E4F644"},
+               {k:"atRisk",n:d.atRisk,label:"AT RISK",c:"#C8AC32"} ];
+    // radi proporcional a arrel quadrada del recompte
+    const maxN = Math.max(d.onTrack,d.behind,d.atRisk,1);
+    const R=(n)=> 12 + 22*Math.sqrt(n/maxN); // 12..34
+    // cercles: gran al centre, mitjà baix-dreta, petit baix-esquerra (composició de la captura)
+    const pos=[ {x:50,y:40}, {x:64,y:66}, {x:36,y:66} ];
+    // ordena st per n desc i assigna posicions per superposició natural
+    const ord=[...st].sort((a,b)=>b.n-a.n);
+    const circHTML = ord.map((s,i)=>{ const r=R(s.n); const p=pos[i];
+      const fill = i===ord.length-1 ? 'rgba(200,172,50,.15)' : 'rgba(255,255,255,.02)';
+      return `<g class="okr-bombolla" tabindex="0" role="img" aria-label="${s.label}: ${s.n} de ${d.total} (${Math.round(s.n/d.total*100)}%)">
+        <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${s.c}" opacity="0.82" stroke="${i===ord.length-1? '#C8AC32':'rgba(255,255,255,.12)'}" stroke-width="1"/>
+        <text x="${p.x}" y="${p.y+1}" text-anchor="middle" dominant-baseline="middle" fill="${i===2?'#0B1D32':'#F3F5EF'}" style="font-size:14px;font-weight:800">${Math.round(s.n/d.total*100)}%</text>
+      </g>`;
+    }).join('');
+    circ.innerHTML = `<svg viewBox="0 0 100 100" style="width:100%;max-width:180px;height:auto;display:block;margin:0 auto">${circHTML}</svg>`;
+    // llegenda
+    const leg=document.getElementById('okrDistLegend');
+    if(leg){
+      leg.innerHTML=`<div class="okr-llegenda" style="display:flex;justify-content:center;gap:14px;flex-wrap:wrap">${st.map(s=>`<span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#AAB2A5"><span style="width:8px;height:8px;border-radius:50%;background:${s.c}"></span>${s.label}</span>`).join('')}</div>`;
+    }
+    // àmbit: subtítol de demo
+    const scope=document.getElementById('okrDistScope');
+    if(scope) scope.textContent = (typeof OKR_DIST_SCOPE!=="undefined"?OKR_DIST_SCOPE:"Àmbit: tots els KR de l'àrea · dades demo");
   }
 
   // taula de tots els objectius
@@ -1887,20 +1935,29 @@ function okrDibuixaChart(sel){
   const labels=serie.map(s=>s.m);
   const reals=serie.map(s=>s.v);
   const meta=sel.kr.meta;
+  // projecció (demo): extrapolació lineal dels 2 últims punts reals, dos passos endavant, marcada.
+  function proj(){
+    const n=reals.length; if(n<2) return [];
+    const d=reals[n-1]-reals[n-2];
+    return [Math.max(0,reals[n-1]+d), Math.max(0,reals[n-1]+2*d)];
+  }
+  const fore=proj();
+  const unitatForm=(v)=> sel.kr.unitat==='€' ? v.toLocaleString('ca',{style:'currency',currency:'EUR'}) : (v>=1000 ? (v/1000).toFixed(1).replace('.',',')+'K' : String(v));
   chart.setOption({
     backgroundColor:'transparent',
-    tooltip:{ trigger:'axis', valueFormatter:(v)=> (sel.kr.unitat==='€'?(v).toLocaleString('ca',{style:'currency',currency:'EUR'}) : v) },
-    legend:{ data:['Real','Meta'], textStyle:{color:'#A8B3BF'} },
-    grid:{ left:70, right:24, top:36, bottom:30 },
-    xAxis:{ type:'category', data:labels, axisLabel:{color:'#A8B3BF'} },
-    yAxis:{ type:'value', name:sel.kr.unitat, nameTextStyle:{color:'#A8B3BF'}, axisLabel:{color:'#A8B3BF'} },
+    tooltip:{ trigger:'axis', backgroundColor:'#1e2420', borderColor:'#2a332c', textStyle:{color:'#F3F5EF'}, valueFormatter:(v)=>unitatForm(v) },
+    legend:{ data:['Real','Meta','Projecció'], textStyle:{color:'#AAB2A5'}, top:0 },
+    grid:{ left:70, right:24, top:40, bottom:30 },
+    xAxis:{ type:'category', data:labels, axisLabel:{color:'#AAB2A5'} },
+    yAxis:{ type:'value', name:sel.kr.unitat, nameTextStyle:{color:'#AAB2A5'}, axisLabel:{color:'#AAB2A5', formatter:v=>unitatForm(v)}, splitLine:{lineStyle:{color:'rgba(255,255,255,.05)'}} },
     series:[
-      { name:'Real', type:'line', smooth:false, data:reals, symbolSize:7, lineStyle:{color:'#C7F542',width:2.5}, itemStyle:{color:'#C7F542'} },
-      { name:'Meta', type:'line', data:labels.map(()=>meta), lineStyle:{color:'#8ee000',width:2,type:'dashed'}, itemStyle:{color:'#8ee000'}, symbol:'none' }
+      { name:'Real', type:'line', smooth:true, data:reals, symbolSize:7, symbol:'circle', lineStyle:{color:'#C7EA45',width:2.5}, itemStyle:{color:'#C7EA45',borderColor:'#C7EA45'}, areaStyle:{color:'rgba(199,234,69,.10)'} },
+      { name:'Meta', type:'line', data:labels.map(()=>meta), lineStyle:{color:'#80C900',width:2,type:'dashed'}, itemStyle:{color:'#80C900'}, symbol:'none' },
+      { name:'Projecció', type:'line', data:[...Array(reals.length-1).fill(null), ...fore], lineStyle:{color:'#E4F644',width:2,type:'dotted'}, itemStyle:{color:'#E4F644'}, symbol:'none' }
     ]
   });
   const note=document.getElementById("okrChartNote");
-  if(note) note.textContent=`${sel.nom} · objectiu ${sel.meta} ${sel.unitat} · ${OKR.periode}. Les línies discontínues són la meta (no estimació).`;
+  if(note) note.textContent=`${sel.kr.nom} · meta ${sel.kr.meta} ${sel.kr.unitat} · ${OKR.periode}. La projecció és una estimació demo (extrapolació lineal).`;
 }
 function setText(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
 
