@@ -2289,18 +2289,23 @@ function applyPeerButton(){
     btn.classList.toggle("on", !!teAmbdos);
   }
 }
-/* navega al dashboard del producte germà (mateix directori, nom de fitxer canviat) */
+/* navega al dashboard del producte germà (mateix directori, sufix tolerant: -dashboard.html, .html, etc.) */
 function goPeer(){
   // 1) URL explícita desada a Configuració
   const saved=(location.protocol!=="file:") ? (localStorage.getItem("sp_peer_url")||cfg.peerUrl||"") : "";
   if(saved){ location.href=saved; return; }
-  // 2) fallback: autodetecció pel nom de fitxer / directori
+  // 2) fallback: autodetecció tolerant al nom de fitxer / directori
   const path=location.pathname.split("/").pop()||"";
-  const esErp = /businesspower/.test(path) || /\/erp(\/|$)/.test(location.pathname);
-  const peer = esErp ? "salespower-dashboard.html" : "businesspower-dashboard.html";
   const dir=location.pathname.slice(0, location.pathname.length-path.length)||"./";
-  const dest = (typeof PEER_URL!=="undefined"&&PEER_URL) ? PEER_URL : dir+peer;
-  location.href = dest;
+  const esErp = /(?:^|\/)erp(?:\/|$)/.test(location.pathname) || /^businesspower/i.test(path);
+  const pBase = /^(salespower|businesspower)/i.exec(path);
+  const aqui  = pBase ? pBase[1].toLowerCase() : (esErp ? "businesspower" : "salespower");
+  const germa = aqui==="businesspower" ? "salespower" : "businesspower";
+  const sufix = pBase ? path.slice(pBase[0].length) : "-dashboard.html"; // conserva -dashboard.html, .html o ""
+  let dest = dir + germa + sufix;
+  if(!pBase) dest = dir + (esErp ? "salespower" : "businesspower") + "-dashboard.html";
+  const finalDest = (typeof PEER_URL!=="undefined"&&PEER_URL) ? PEER_URL : dest;
+  location.href = finalDest;
 }
 const PEER_URL = "";
 /* Transcriptor de veu a text (Web Speech API, només Chrome/Edge); si no hi ha suport, desactiva el botó */
