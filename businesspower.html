@@ -391,6 +391,30 @@
     <div class="card"><div class="kicker mb-2">Oportunitats</div>
       <table class="tbl"><thead><tr><th>Oportunitat</th><th>Client</th><th>Etapa</th><th>Dies</th><th class="text-right">Valor</th><th>Prob.</th></tr></thead>
       <tbody id="dealsTable"></tbody></table></div>
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      <div class="card" style="border-top:3px solid #8B5CF6"><div class="kicker">Vendes netes (període)</div><div class="text-2xl font-extrabold mt-1" id="vaNets">—</div><div class="text-xs muted" id="vaOps">—</div></div>
+      <div class="card"><div class="kicker">Tiquet mitjà</div><div class="text-2xl font-extrabold mt-1" id="vaTiquet">—</div><div class="text-xs muted">vendes netes / operacions</div></div>
+      <div class="card"><div class="kicker">Compliment d'objectiu</div><div class="text-2xl font-extrabold mt-1" id="vaMeta">—</div><div class="text-xs muted">sobre meta del període</div></div>
+      <div class="card"><div class="kicker">Vendes per família</div><div class="flex items-center gap-3 mt-1"><div id="vaDonut"></div><div id="vaFamLeg" class="space-y-1 flex-1"></div></div></div>
+    </div>
+    <div class="card mb-5"><div class="kicker mb-2">Rànquing de comercials (meta · resultat · compliment · tiquet)</div>
+      <table class="tbl"><thead><tr><th>Comercial</th><th class="text-right">Meta</th><th class="text-right">Resultat</th><th>Compliment</th><th class="text-right">Tiquet mitjà</th></tr></thead>
+      <tbody id="vaRanking" style="color:#8B5CF6"></tbody></table></div>
+    <div class="card mb-4" style="border-top:3px solid #f0a09a">
+      <div class="flex items-center justify-between mb-1">
+        <div><div class="kicker mb-1" style="color:#f0a09a">Competència · Far de vigilància</div>
+        <h2 class="text-lg font-bold m-0">Qui et fa la competència</h2></div>
+        <span class="bdg b-red" id="compN">0 competidors</span>
+      </div>
+      <p class="text-xs muted mb-3">Registra els teus competidors (nom comercial i web). El far vigila la seva web i t'avisa quan canvien preus, oferta o missatge. <b>La vigilància automàtica i les cerques periòdiques de nous competidors són una opció de pagament.</b></p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+        <input id="compNomInput" type="text" placeholder="Nom comercial (ex: Rival SL)" style="background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
+        <input id="compWebInput" type="text" placeholder="Web (ex: rival.com)" style="background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
+        <input id="compCatInput" type="text" placeholder="Categoria (opcional)" style="background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
+      </div>
+      <button class="btn primary" onclick="compAfegeix()" style="margin-bottom:14px">+ Afegeix competidor</button>
+      <table class="tbl"><thead><tr><th>Competidor</th><th>Categoria</th><th>Web</th><th></th></tr></thead><tbody id="compTaula"></tbody></table>
+    </div>
   </section>
 
   <!-- ======== FACTURACIÓ ======== -->
@@ -1138,6 +1162,7 @@ function cards(){
     <span class="bdg ${saludVal>=65?'b-gold':saludVal>=45?'b-orange':'b-red'}">${grade}</span></div>
     <div class="bar-track bg-white/10 h-2 rounded-full overflow-hidden"><div class="bar" style="background:linear-gradient(90deg,var(--spgold),#f2d489)" data-w="${saludVal}"></div></div>
     <div class="text-[10px] muted mt-1">${saludVal}/100</div>`;
+  renderVendesAvancades();
   /* funnel CRM */
   const stages=["Lead","Qualified","Proposal","Negotiation","Closed Won","Closed Lost"];
   const mxE=Math.max(1,...stages.map(s=>perEtapa[s]||0));
@@ -2126,6 +2151,127 @@ function renderFinances(){
   }
 }
 window.renderFinances=renderFinances; window.FIN=FIN; window.finMarge=finMarge;
+/* ============== VENDES AVANÇADES (§7) — rànquing de comercials + tiquet mitjà ==============
+   Segons document SPAI §7: rànquing de comercials (meta, resultat, compliment, tiquet),
+   vendes netes i tiquet mitjà. Dades deterministes que concilien amb el total guanyat
+   del dashboard (43.900 € = suma de resultats dels 4 comercials). */
+
+const VENDA = {
+  venedesNets: 43900,          // coincideix amb "Guanyat (2026)" del dashboard
+  operacions: 9,               // operacions guanyades que formen el total
+  metaPeriode: 41000,
+  comercials: [
+    { nom:"Lídia Ferrer",  rol:"Responsable", op:3, resultat:14300, meta:12000 },
+    { nom:"Marc Buigues",  rol:"Comercial",    op:2, resultat:11200, meta:10000 },
+    { nom:"Joana Vidal",   rol:"Comercial",    op:2, resultat:9800,  meta:10000 },
+    { nom:"Pau Serra",     rol:"Comercial",    op:2, resultat:8600,  meta:9000 }
+  ]
+};
+/* distribució de vendes netes per família (donut) — suma = 43900 */
+const VENDA_FAMILIES = [
+  { fam:"ERP / Gestió",   n:17600 },
+  { fam:"Web + SEO",      n:12800 },
+  { fam:"Automatització", n:9500 },
+  { fam:"Manteniment",    n:4000 }
+];
+
+function vendesCompliment(c){ return Math.round(c.resultat/c.meta*100); }
+
+function renderVendesAvancades(){
+  // tiquet mitjà = vendes netes / operacions
+  const tt = VENDA.venedesNets / VENDA.operacions;
+  setText("vaNets", fmtEUR(VENDA.venedesNets));
+  setText("vaOps", VENDA.operacions+" operacions");
+  setText("vaTiquet", fmtEUR(Math.round(tt)));
+  setText("vaMeta", Math.round(VENDA.venedesNets/VENDA.metaPeriode*100)+"%");
+
+  // rànquing de comercials
+  const tb=document.getElementById("vaRanking");
+  if(tb){
+    const ord=[...VENDA.comercials].sort((a,b)=>b.resultat-a.resultat);
+    tb.innerHTML=ord.map((c,i)=>{
+      const cmp=vendesCompliment(c);
+      const tt2=Math.round(c.resultat/c.op);
+      const med="🥇🥈🥉";
+      return `<tr><td><span class="text-xs muted">${med[i]||(i+1)+"·"}</span> <b>${c.nom}</b><div class="text-xs muted">${c.rol}</div></td>
+        <td class="mono">${fmtEUR(c.meta)}</td><td class="mono" style="color:#8B5CF6">${fmtEUR(c.resultat)}</td>
+        <td><div class="flex items-center gap-2"><div class="bar-track bg-white/10 h-2 rounded-full overflow-hidden" style="width:70px"><div class="bar" style="width:${Math.min(100,cmp)}%;background:linear-gradient(90deg,#8B5CF6,#C026D3)"></div></div><span class="mono text-xs">${cmp}%</span></div></td>
+        <td class="mono">${fmtEUR(tt2)}</td></tr>`;
+    }).join('');
+  }
+
+  // donut per família
+  const dc=document.getElementById("vaDonut");
+  if(dc){
+    const tot=VENDA_FAMILIES.reduce((s,f)=>s+f.n,0);
+    const cols=["#8B5CF6","#C026D3","#29A7D5","#15D9CD"];
+    let acc=0; const rr=40; let seg="";
+    VENDA_FAMILIES.forEach((f,i)=>{
+      const frac=f.n/tot; const a0=acc*2*Math.PI; const a1=(acc+frac)*2*Math.PI;
+      const x1=50+rr*Math.cos(a0), y1=50+rr*Math.sin(a0);
+      const x2=50+rr*Math.cos(a1), y2=50+rr*Math.sin(a1);
+      seg+=`<path d="M50,50 L${x1},${y1} A${rr},${rr} 0 ${frac>0.5?1:0} 1 ${x2},${y2} Z" fill="${cols[i]}"/>`;
+      acc+=frac;
+    });
+    dc.innerHTML=`<svg viewBox="0 0 100 100" style="width:150px;height:150px">${seg}<circle cx="50" cy="50" r="${rr*0.55}" fill="#101417"/></svg>`;
+    const lg=document.getElementById("vaFamLeg");
+    if(lg) lg.innerHTML=VENDA_FAMILIES.map((f,i)=>`<div class="flex items-center gap-2"><span style="width:10px;height:10px;border-radius:3px;background:${cols[i]}"></span><span class="text-xs">${f.fam}</span><b class="text-xs">${fmtEUR(f.n)} (${Math.round(f.n/tot*100)}%)</b></div>`).join('');
+  }
+}
+window.renderVendesAvancades=renderVendesAvancades; window.VENDA=VENDA; window.VENDA_FAMILIES=VENDA_FAMILIES;
+/* ============== COMPETÈNCIA per tenant (far de vigilància) ==============
+   Cada tenant gestiona la seva competència: competidors (nom comercial, web, categoria).
+   Es guarden a localStorage per tenant: sp_competidors_<tenant>.
+   El 'far' (detecció de canvis a les webs) es connecta a changedetection.io des del
+   backend — aquí hi deixem el ganxo (watchURL) i l'estat de vigilància. */
+
+function compClau(){ return "sp_competidors_"+(SP.tenant||"tenant"); }
+function compCarrega(){
+  try{ return JSON.parse(localStorage.getItem(compClau())||"[]"); }catch(e){ return []; }
+}
+function compDesa(lista){ localStorage.setItem(compClau(), JSON.stringify(lista)); }
+
+function renderCompetencia(){
+  const llista = compCarrega();
+  const tb = document.getElementById("compTaula");
+  if(tb){
+    if(!llista.length){
+      tb.innerHTML = `<tr><td colspan="4" class="text-xs muted" style="padding:12px 10px">Encara no tens competidors registrats. Afegeix el primer a sota (nom comercial + web).</td></tr>`;
+    } else {
+      tb.innerHTML = llista.map((c,i)=>`<tr>
+        <td class="font-semibold">${c.nom}</td>
+        <td class="text-xs muted">${c.cat||"Competidor directe"}</td>
+        <td class="text-xs" style="word-break:break-all">${c.web||"—"}</td>
+        <td class="text-right"><button class="btn" onclick="compTreu(${i})" style="padding:4px 10px;font-size:11px">✕</button></td>
+      </tr>`).join('');
+    }
+  }
+  const n=document.getElementById("compN");
+  if(n) n.textContent = llista.length+" competidors vigilats";
+}
+
+function compAfegeix(){
+  const nom=document.getElementById("compNomInput")?.value?.trim();
+  const web=document.getElementById("compWebInput")?.value?.trim();
+  const cat=document.getElementById("compCatInput")?.value?.trim();
+  if(!nom){ alert("Posa almenys el nom del competidor."); return; }
+  let l=compCarrega();
+  l.push({ nom, web:web||"", cat:cat||"Competidor directe", data:new Date().toISOString().slice(0,10) });
+  compDesa(l);
+  if(document.getElementById("compNomInput")) document.getElementById("compNomInput").value="";
+  if(document.getElementById("compWebInput")) document.getElementById("compWebInput").value="";
+  if(document.getElementById("compCatInput")) document.getElementById("compCatInput").value="";
+  renderCompetencia();
+  notificarCritiques("Competidor afegit", "S'ha afegit "+nom+" a la vigilància del tenant "+(SP.tenant||"")+".", "competencia");
+}
+function compTreu(i){
+  let l=compCarrega(); l.splice(i,1); compDesa(l); renderCompetencia();
+}
+/* ganxo per al far changedetection.io: quan el backend tingui el servei,
+   el dashboard consultarà /api/vigilancia/<tenant> i pintarà els canvis detectats. */
+const COMP_FAR_URL = (typeof window.__COMP_FAR__!=="undefined"&&window.__COMP_FAR__) || "";
+
+window.renderCompetencia=renderCompetencia; window.compAfegeix=compAfegeix; window.compTreu=compTreu; window.compCarrega=compCarrega; window.COMP_FAR_URL=COMP_FAR_URL;
 window.renderOKR=renderOKR; window.okrDibuixaChart=okrDibuixaChart; window.OKR=OKR; window.okrProgres=okrProgres; window.okrEstat=okrEstat; window.okrObjectiuProgres=okrObjectiuProgres; window.okrProgresPct=okrProgresPct;
 function renderInsights(){
   document.getElementById("insTime").textContent="analitzat ara · "+insights.length+" troballes · "+SP.series.length+" mesos";
