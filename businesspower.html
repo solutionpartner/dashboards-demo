@@ -489,7 +489,14 @@
 
 
   <!-- ======== OBJECTIUS / OKR (mòdul, accent llima) ======== -->
-  <section class="view" id="view-okr">
+  <section class="view" id="view-okr" style="background:linear-gradient(135deg, rgba(199,245,66,.09), rgba(0,0,0,0) 60%); border-top:2px solid rgba(199,245,66,.55);">
+      <div class="flex flex-wrap items-center gap-2 mb-2" id="okrQPick">
+        <button class="bdg qpick" data-q="Q1" onclick="okrMostraQuart('Q1')" style="cursor:pointer;padding:3px 14px;border-radius:999px;border:1px solid rgba(199,245,66,.35);color:#C7F542;background:rgba(199,245,66,.06);font-weight:700">Q1</button>
+        <button class="bdg qpick" data-q="Q2" onclick="okrMostraQuart('Q2')" style="cursor:pointer;padding:3px 14px;border-radius:999px;border:1px solid rgba(199,245,66,.35);color:#C7F542;background:rgba(199,245,66,.06);font-weight:700">Q2</button>
+        <button class="bdg qpick" data-q="Q3" onclick="okrMostraQuart('Q3')" style="cursor:pointer;padding:3px 14px;border-radius:999px;border:1px solid rgba(199,245,66,.35);color:#C7F542;background:rgba(199,245,66,.06);font-weight:700">Q3</button>
+        <button class="bdg qpick on" data-q="Q4" onclick="okrMostraQuart('Q4')" style="cursor:pointer;padding:3px 14px;border-radius:999px;border:1px solid #C7F542;color:#0B1D32;background:#C7F542;font-weight:800">Q4 · actiu</button>
+        <span class="text-xs muted" id="okrQNote">Q1–Q3 són històric tancat · Q4 és el trimestre en curs.</span>
+      </div>
     <div class="flex items-center justify-between mb-2">
       <div><div class="kicker okr-kicker">OKR · Objectives Key Results</div>
         <h1 class="serif text-4xl" style="margin:0; color:#C7F542">Objectius i resultats clau</h1></div>
@@ -497,7 +504,7 @@
     </div>
     <p class="text-sm muted mb-4 max-w-2xl">Seguiment dels objectius del trimestre i dels seus resultats clau (KRs). El color de cada estat surt de regles documentades: <b>en termini</b>, <b>endarrerit</b> o <b>en risc</b>.</p>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-      <div class="card okr-band" style="border-top:3px solid #C7F542"><div class="kicker">Progrés agregat OKR</div><div class="text-3xl font-extrabold mt-1" id="okrProg">0%</div><div class="text-xs muted">mitjana ponderada de KRs vàlids</div></div>
+      <div class="card okr-band" data-drill="okr" style="border-top:3px solid #C7F542"><div class="kicker">Progrés agregat OKR</div><div class="text-3xl font-extrabold mt-1" id="okrProg">0%</div><div class="text-xs muted">mitjana ponderada de KRs vàlids</div></div>
       <div class="card"><div class="kicker">Resultats clau actius</div><div class="text-3xl font-extrabold mt-1" id="okrKRs">0</div><div class="text-xs muted"><span id="okrKRmade">0</span> assolits</div></div>
       <div class="card"><div class="kicker">Confiança de l'equip</div><div class="text-3xl font-extrabold mt-1" id="okrConf">0,0</div><div class="text-xs muted">mitjana de respostes del període (sobre 5)</div></div>
     </div>
@@ -1801,6 +1808,52 @@ function okrDibuixaChart(sel){
   if(note) note.textContent=`${sel.nom} · objectiu ${sel.meta} ${sel.unitat} · ${OKR.periode}. Les línies discontínues són la meta (no estimació).`;
 }
 function setText(id,v){ const el=document.getElementById(id); if(el) el.textContent=v; }
+
+/* ====== Selector de trimestre OKR (Q1-Q4) · històric fix vs actiu ====== */
+let _okrQ="Q4";
+function okrQuartDades(q){
+  // Q1-Q3: històric tancat (dades fixes demo coherents, amb deriva lleu cada trimestre)
+  // Q4: l'actual (SP.factures/series reals)
+  const escala = q==="Q1"?0.35 : q==="Q2"?0.62 : q==="Q3"?0.85 : 1;
+  return (OKR.objectives||[]).map((o,i)=>{
+    const krs=(o.krs||[]).map(kr=>{
+      const base=(kr.serie||[])[0]||{m:"M1",v:0};
+      return {...kr, serie:(kr.serie||[]).map(m=>({m:m.m, v: Math.round(m.v*escala)}))};
+    });
+    return {...o, krs};
+  });
+}
+
+
+/* ============== Selector de període OKR (Q1·Q2·Q3 històric tancat · Q4 actiu) ============== */
+const OKRQ = {
+  Q1:{kick:"Q1 · històric tancat", actiu:false, escala:0.2},
+  Q2:{kick:"Q2 · històric tancat", actiu:false, escala:0.4},
+  Q3:{kick:"Q3 · històric tancat", actiu:false, escala:0.6},
+  Q4:{kick:"Q4 · trimestre actiu", actiu:true, escala:1}
+};
+let _okrEscalaOKR = 1;
+function okrMostraQuart(q){
+  const f = OKRQ[q] || OKRQ.Q4;
+  window.__okrEscala = f.escala;
+  const kick = document.querySelector("#view-okr .kicker, .okr-kicker");
+  if(kick) kick.textContent = "OKR · "+f.kick;
+  const qn = document.getElementById("okrQNote");
+  if(qn) qn.textContent = f.actiu ? "Q4 és el trimestre en curs: les dades es revisen periòdicament."
+    : "Q"+q.slice(1)+" és històric tancat: registre fix del trimestre.";
+  document.querySelectorAll("#view-okr .qpick, #okrQPick .qpick").forEach(b=>{
+    const on = b.dataset.q === q;
+    b.classList.toggle("on", on);
+    b.style.borderColor = on ? (f.actiu? "#C7F542" : "rgba(168,179,191,.45)") : "rgba(168,179,191,.3)";
+    b.style.background  = on ? (f.actiu? "rgba(199,245,66,.16)" : "rgba(168,179,191,.1)") : "rgba(0,0,0,0)";
+    b.style.color       = on ? (f.actiu? "#C7F542" : "#A8B3BF") : "#A8B3BF";
+    b.style.fontWeight  = on ? "800" : "600";
+    b.textContent = b.dataset.q + (on ? (f.actiu? " · actiu" : "") : "");
+  });
+  renderOKR();
+}
+window.okrMostraQuart = okrMostraQuart; window.OKRQ = OKRQ;
+/* ============== fi selector de període ============== */
 window.renderOKR=renderOKR; window.okrDibuixaChart=okrDibuixaChart; window.OKR=OKR; window.okrProgres=okrProgres; window.okrEstat=okrEstat; window.okrObjectiuProgres=okrObjectiuProgres; window.okrProgresPct=okrProgresPct;
 function renderInsights(){
   document.getElementById("insTime").textContent="analitzat ara · "+insights.length+" troballes · "+SP.series.length+" mesos";
