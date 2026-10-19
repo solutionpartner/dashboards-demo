@@ -2562,14 +2562,11 @@ function aplicarModuls(){
         :(mode==="crm"?"SalesPower · Gestió de clients (⇄ a BusinessPower)":"Business Power · Control operatiu (⇄ a SalesPower)"))
       : (crm?"SalesPower · Gestió de clients" : (erp?"Business Power · Control operatiu":"Objectius i resultats clau"));
   }
-  // nav: mostra l'ítem del modul contractat; si mode crm/erp i l'ítem és de l'altre modul central, l'amaga
+  // nav: mostra SEMPRE tots els mòduls contractats (l'entorn és unificat per mòduls).
+  // El "mode" només afecta el títol; mai amaga seccions contractades.
   document.querySelectorAll("#nav a[data-mod]").forEach(a=>{
     const mod=a.dataset.mod;
-    let vis=false;
-    if(mod==="crm") vis = crm && (mode==="both"||mode==="crm");
-    else if(mod==="erp") vis = erp && (mode==="both"||mode==="erp");
-    else vis = te(mod); // okr i d'altres: sempre que contractat
-    a.style.display = vis ? "" : "none";
+    a.style.display = te(mod) ? "" : "none";
   });
   const peer=document.getElementById("peerSw");
   if(peer){ peer.style.display = dos ? "" : "none"; if(peer.dataset) peer.dataset.mode=mode; }
