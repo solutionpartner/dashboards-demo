@@ -317,11 +317,12 @@
 
   <!-- ======== DASHBOARD ======== -->
   <section class="view act" id="view-dash">
-    <header class="flex items-center justify-between mb-3" style="margin-top:14px">
-      <div>
-        <div class="flex items-center gap-3 mb-1"><img src="" id="dashLogo" alt="BAIOS" style="height:44px;width:auto;display:block;object-fit:contain"/><div class="kicker">Business AI Operative System</div></div>
-        <h1 class="serif" style="font-size:clamp(1.4rem,2.6vw,2rem);line-height:1.05;letter-spacing:-.02em;margin:0">Dashboard central <span style="font-weight:300;opacity:.7">BAIOS</span></h1></div>
-      <div class="flex items-center gap-3">
+    <header class="mb-3" style="margin-top:14px">
+      <div style="text-align:center">
+        <img src="" id="dashLogo" alt="BAIOS" style="height:130px;width:auto;display:block;object-fit:contain;margin:0 auto 6px"/>
+        <div class="kicker" style="width:100%">Business AI Operative System</div>
+      </div>
+      <div class="flex items-center justify-end gap-3" style="margin-top:8px">
         <div class="text-right text-xs muted hidden sm:block" id="liveBadge"><span id="liveDot">●</span> <span id="liveTxt">dades estàtiques</span><br/>Actualitzat avui 10:35<br/>Tenant erp+crm · 2026</div>
         <button id="alertsBtn" onclick="openAlerts()" title="Alertes i resum" aria-label="Alertes">🔔<span class="badge" id="alertsCount">0</span></button>
       </div>
