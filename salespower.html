@@ -245,7 +245,7 @@
   .msg.a .robo-tag .robo-img{ width:22px; height:22px; border-radius:6px; object-fit:contain; display:inline-block; }
   .msg.a .robo-tag svg{ width:100%; height:100%; color:#0B1D32; }
   #chat .ch-hd .ai img{ width:30px; height:30px; border-radius:8px; object-fit:contain; display:block; }
-  #chatBtn img{ width:54px; height:54px; border-radius:50%; object-fit:contain; display:block; }
+  #chatBtn img{ width:52px; height:52px; border-radius:14px; object-fit:contain; display:block; background:rgba(255,255,255,.06); border:1px solid rgba(231,196,125,.35); }
   #chat .robo-c{ display:flex; align-items:center; gap:8px; }
   #chat .ch-body{ flex:1; overflow-y:auto; padding:16px 18px; display:flex; flex-direction:column; gap:10px; }
   .msg{ max-width:86%; padding:11px 14px; border-radius:14px; font-size:14px; line-height:1.5; animation:mIn .3s cubic-bezier(.16,1,.3,1); }
@@ -320,7 +320,7 @@
     <header class="mb-3" style="margin-top:14px">
       <div style="text-align:center">
         <img src="" id="dashLogo" alt="BAIOS" style="height:130px;width:auto;display:block;object-fit:contain;margin:0 auto 6px"/>
-        <div class="kicker" style="width:100%">Business AI Operative System</div>
+        <div style="width:100%;font-size:clamp(13px,1.6vw,16px);font-weight:700;letter-spacing:.06em;color:#E7C47D;text-shadow:0 0 14px rgba(231,196,125,.35)">Business AI Operative System &middot; Plataforma de control i automatització</div>
       </div>
       <div class="flex items-center justify-end gap-3" style="margin-top:8px">
         <div class="text-right text-xs muted hidden sm:block" id="liveBadge"><span id="liveDot">●</span> <span id="liveTxt">dades estàtiques</span><br/>Actualitzat avui 10:35<br/>Tenant erp+crm · 2026</div>
@@ -877,7 +877,7 @@
 <button id="chatBtn" aria-label="Chat amb IA" onclick="toggleChat()"><span class="pulse"></span><img src="" onerror="this.style.visibility='hidden'" id="chatBtnRobot" class="robo-avatar-big"/></button>
 <div id="chat">
   <div class="ch-hd">
-    <div class="ai"><img src="" id="chatAvatarRobot" class="robo-avatar-sm"/></div>
+    <div class="ai"><img src="" id="chatAvatarRobot" style="width:34px;height:34px;border-radius:10px;object-fit:contain;display:block;background:rgba(255,255,255,.05)"/></div>
     <div style="flex:1"><div class="text-sm font-bold">Assistent de negoci <span class="bdg b-gold" style="font-size:9px">IA</span></div><div class="text-[10px] muted" id="chatStatus">connectant al Business AI OS…</div></div>
     <button class="btn" onclick="clearHistory()" title="Neteja conversa" style="padding:5px 8px">🧹</button>
     <button class="btn" onclick="toggleChat(false)" style="padding:5px 9px">✕</button>
