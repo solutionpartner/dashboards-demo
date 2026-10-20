@@ -317,11 +317,10 @@
 
   <!-- ======== DASHBOARD ======== -->
   <section class="view act" id="view-dash">
-    <header class="mb-3" style="margin-top:0;padding:26px 20px 22px;border-radius:0 0 16px 16px;background:linear-gradient(180deg,#ffffff 0%,#eef3fa 28%,#dde6f0 45%,#0a1526 88%,#0a1526 100%)">
+    <header class="mb-3" style="margin-top:0;padding:8px 20px 6px;border-bottom:1px solid rgba(231,196,125,.18)">
       <div style="text-align:center">
-        <img src="" id="dashLogo" alt="BAIOS" style="height:150px;width:auto;display:block;object-fit:contain;margin:0 auto 10px"/>
-        <div style="width:100%;font-size:clamp(20px,2.6vw,28px);font-weight:800;letter-spacing:.04em;color:#9a7209;text-shadow:0 1px 2px rgba(255,255,255,.55)">Business AI Operative System</div>
-        <div style="width:100%;font-size:clamp(12px,1.5vw,15px);font-weight:600;letter-spacing:.08em;color:#0B1D32;margin-top:4px">Plataforma de control i automatització</div>
+        <div style="width:100%;font-size:clamp(30px,4vw,44px);font-weight:800;letter-spacing:.02em;color:#E7C47D;text-shadow:0 0 22px rgba(231,196,125,.35)">Business AI Operative System</div>
+        <div style="width:100%;font-size:clamp(14px,1.8vw,18px);font-weight:500;letter-spacing:.08em;color:rgba(231,196,125,.8);margin-top:4px">Plataforma de control i automatització</div>
       </div>
       <div class="flex items-center justify-end gap-3" style="margin-top:8px">
         <div class="text-right text-xs muted hidden sm:block" id="liveBadge"><span id="liveDot">●</span> <span id="liveTxt">dades estàtiques</span><br/>Actualitzat avui 10:35<br/>Tenant erp+crm · 2026</div>
@@ -2673,8 +2672,7 @@ function applyLogo(){
   const img=document.getElementById("sideLogo");
   const esDark = (typeof cfg!=="undefined") ? (cfg.theme!=="light") : true;
   if(img) img.src = esDark ? BAIOS_MEN_DARK : BAIOS_MEN_LIGHT;
-  const dimg=document.getElementById("dashLogo");
-  if(dimg) dimg.src = BAIOS_BIG_LIGHT;
+  // (logo gran de la capçalera retirat per decisió de disseny)
   const c=document.getElementById("sideClient");
   if(c) c.textContent = cfg.client;
   if(typeof aplicaSubMarca==="function"){ const act=document.querySelector("#nav a.act"); aplicaSubMarca(act?act.dataset.v:null); }
