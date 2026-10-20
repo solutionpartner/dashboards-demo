@@ -73,8 +73,23 @@
   .nav a.act{ color:var(--spgold); border-left-color:var(--spgold); background:rgba(231,196,125,.09); }
   .nav .ic{ width:18px; text-align:center; opacity:.8; }
   .nav .ct{ margin-left:auto; font-size:10px; background:rgba(255,255,255,.08); padding:1px 7px; border-radius:99px; }
-  .nav a[data-v="okr"]{ position:relative; }
-  .nav a[data-v="okr"]::before{ content:""; position:absolute; left:8px; top:50%; transform:translateY(-50%); width:7px; height:7px; border-radius:50%; background:#C7F542; box-shadow:0 0 6px rgba(199,245,66,.7); }
+  .nav a{ position:relative; }
+  .nav a::before{ content:""; position:absolute; left:8px; top:50%; transform:translateY(-50%); width:7px; height:7px; border-radius:50%; opacity:.85; }
+  .nav a:not(.ictx)::before{ box-shadow:0 0 6px rgba(255,255,255,.35); }
+  /* Punts de color per mòdul */
+  .nav a[data-v="dash"]::before{ background:#E7C47D; }
+  .nav a[data-v="crm"]::before{ background:#f0a09a; }
+  .nav a[data-v="fact"]::before{ background:#E7C47D; }
+  .nav a[data-v="stock"]::before{ background:#67b8f0; }
+  .nav a[data-v="cli"]::before{ background:#4ade80; }
+  .nav a[data-v="prov"]::before{ background:#94a3b8; }
+  .nav a[data-v="ins"]::before{ background:#c084fc; }
+  .nav a[data-v="okr"]::before{ background:#C7F542; box-shadow:0 0 6px rgba(199,245,66,.7); }
+  .nav a[data-v="rrhh"]::before{ background:#15D9CD; }
+  .nav a[data-v="fin"]::before{ background:#8B5CF6; }
+  .nav a[data-v="autos"]::before{ background:#38bdf8; }
+  .nav a[data-v="report"]::before{ background:#E7C47D; }
+  .nav a[data-v="cfg"]::before{ background:#a8b3c2; }
   .nav a[data-v="okr"].act{ color:#C7F542; border-left-color:#C7F542; background:rgba(199,245,66,.10); }
   .okr-band{ border-top:3px solid #C7F542; }
   .okr-kicker{ color:#C7F542; font-weight:800; letter-spacing:.08em; }
@@ -276,10 +291,10 @@
     <a data-v="prov" data-mod="erp"><span class="ic">🚚</span>Proveïdors</a>
     <a data-v="ins"><span class="ic">🧠</span>Insights IA <span class="ct" id="insCount"></span></a>
     <a data-v="okr" data-mod="okr"><span class="ic">🎯</span>Objectius</a>
-    <a data-v="autos"><span class="ic">⚡</span>Automatitzacions <span class="ct" id="autosCount"></span></a>
-    <a data-v="report"><span class="ic">📄</span>Reporting <span class="ct" id="reportLock">🔒</span></a>
     <a data-v="rrhh" data-mod="rrhh"><span class="ic">👥</span>Equip</a>
     <a data-v="fin" data-mod="fin"><span class="ic">💶</span>Finances</a>
+    <a data-v="autos"><span class="ic">⚡</span>Automatitzacions <span class="ct" id="autosCount"></span></a>
+    <a data-v="report"><span class="ic">📄</span>Reporting <span class="ct" id="reportLock">🔒</span></a>
     <a data-v="cfg"><span class="ic">⚙️</span>Configuració</a>
   </nav>
 </aside>
@@ -1194,9 +1209,10 @@ function cards(){
   /* funnel CRM */
   const stages=["Lead","Qualified","Proposal","Negotiation","Closed Won","Closed Lost"];
   const mxE=Math.max(1,...stages.map(s=>perEtapa[s]||0));
+  const stageColor={Lead:'#3a91d1',Qualified:'#E7C47D',Proposal:'#f0a09a',Negotiation:'#c084fc','Closed Won':'var(--spgold)','Closed Lost':'#94a3b8'};
   document.getElementById("funnel").innerHTML=stages.map(s=>`<div>
     <div class="flex items-center justify-between text-[11px] mb-1"><span>${s}</span><span class="font-semibold gold">${fmt((perEtapa[s]||0))} €</span></div>
-    <div class="bar-track bg-white/8 h-2.5 rounded-full overflow-hidden"><div class="bar" data-w="${((perEtapa[s]||0)/mxE*100)}" style="${s==="Closed Won"?'background:linear-gradient(90deg,var(--spgold),#f2d489)':''}"></div></div></div>`).join("");
+    <div class="bar-track bg-white/8 h-2.5 rounded-full overflow-hidden"><div class="bar" data-w="${((perEtapa[s]||0)/mxE*100)}" style="width:${((perEtapa[s]||0)/mxE*100)}%;background:${stageColor[s]||'#E7C47D'}"></div></div></div>`).join("");
   /* ECharts: anàlisi avançada */
   if(document.getElementById("echHeat")) renderECharts();
   /* Alertes + resum setmanal */
