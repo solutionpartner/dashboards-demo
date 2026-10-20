@@ -319,7 +319,7 @@
   <section class="view act" id="view-dash">
     <header class="mb-3" style="margin-top:0;padding:8px 20px 6px;border-bottom:1px solid rgba(231,196,125,.18)">
       <div style="text-align:center">
-        <img src="" id="dashLogo" alt="Business AI Operative System" style="height:150px;max-height:150px;width:auto;display:block;object-fit:contain;margin:0 auto 6px"/>
+        <img src="" id="dashLogo" alt="Business AI Operative System" style="height:175px;max-height:175px;width:auto;display:block;object-fit:contain;margin:0 auto 6px"/>
         <div style="width:100%;font-size:clamp(13px,1.6vw,17px);font-weight:600;letter-spacing:.06em;color:#E7C47D">Plataforma de control i automatització</div>
       </div>
       <div class="flex items-center justify-end gap-3" style="margin-top:8px">
@@ -2675,7 +2675,8 @@ function applyLogo(){
   const esDark = (typeof cfg!=="undefined") ? (cfg.theme!=="light") : true;
   const dimg2=document.getElementById("dashLogo");
   if(dimg2) dimg2.src = BAIOS_WEB_BIG;
-  if(img) img.src = esDark ? BAIOS_MEN_DARK : BAIOS_MEN_LIGHT;
+  // menú lateral: nou logotip web (fons blau nit) en fosc; blau estàndard en clar
+  if(img) img.src = esDark ? BAIOS_WEB_MEN : BAIOS_MEN_LIGHT;
   // (logo gran de la capçalera retirat per decisió de disseny)
   const c=document.getElementById("sideClient");
   if(c) c.textContent = cfg.client;
