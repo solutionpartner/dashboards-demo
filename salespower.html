@@ -3267,6 +3267,11 @@ async function askGlobalLLM(q, context){
       let det="HTTP "+r.status;
       try{ const e=await r.json(); det+=" · "+(e.error&&(e.error.message||e.error.code)||JSON.stringify(e).slice(0,120)); }catch(_){}
       window.__llmErr=det;
+      /* model retirat/inexistent (404/400): prova automàticament amb els fallbacks del proveïdor */
+      if(r.status===404||r.status===400||/model|not.?found|does not exist|access/.test(det)){
+        const fallback=await llmFallbackModel(L.url,[L.model],q,context);
+        if(fallback){ window.__llmErr=null; return fallback; }
+      }
       return null;
     }
     window.__llmErr=null;
@@ -3279,10 +3284,38 @@ async function askGlobalLLM(q, context){
 const LLM_PROVIDERS={
   openrouter:{ url:"https://openrouter.ai/api/v1", model:"google/gemma-4-26b-a4b-it:free" },
   glm:{ url:"https://open.bigmodel.cn/api/paas/v4", model:"glm-4.7-flash" },
-  groq:{ url:"https://api.groq.com/openai/v1", model:"llama-3.3-70b-versatile" },
+  groq:{ url:"https://api.groq.com/openai/v1", model:"openai/gpt-oss-120b" },
   mistral:{ url:"https://api.mistral.ai/v1", model:"mistral-small-latest" },
   openai:{ url:"https://api.openai.com/v1", model:"gpt-4o-mini" }
 };
+/* Fallbacks per proveïdor: si un model dona 404/retirat, provem el següent sense que l'usuari toqui res.
+   (Groq retira models cada pocs mesos; això ho fa a prova de futurs talls.) */
+const LLM_FALLBACKS={
+  "api.groq.com":["openai/gpt-oss-120b","openai/gpt-oss-20b","qwen/qwen3.6-27b","qwen/qwen3.8-27b"],
+  "openrouter.ai":["google/gemma-4-26b-a4b-it:free","nvidia/nemotron-3-super-120b-a12b:free","liquid/lfm-2.5-2.6b:free"],
+  "open.bigmodel.cn":["glm-4.7-flash","glm-4.5-flash"]
+};
+async function llmFallbackModel(url, triedModels, userMsg, ctx){
+  const host=(url||"").match(/https?:\/\/([^\/]+)/);
+  const list=LLM_FALLBACKS[host&&host[1]]||[];
+  for(const m of list){
+    if(triedModels.includes(m)) continue;
+    const chat=[];
+    chat.push({role:"system",content:`Ets l'assistent d'IA de SalesPower, integrat al Business AI OS d'una PIME client. Respon en català, concís i accionable. Combina les DADES DEL CLIENT (context) amb coneixement de mercat/sector quan sigui rellevant per respondre sobre prediccions, patrons o possibles canvis en altres àrees del negoci. Si la pregunta requereix dades externes (sector, tendències, normativa), digues-ho i usa-les per completar la resposta.\n\n${ctx}`});
+    chat.push({role:"user",content:userMsg});
+    try{
+      const r=await fetch(url.replace(/\/$/,"")+"/chat/completions",{method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":"Bearer "+cfg.llm.key},
+        body:JSON.stringify({model:m,messages:chat,temperature:0.4,max_tokens:600})});
+      if(!r.ok){ triedModels.push(m); continue; }
+      const d=await r.json();
+      const c=d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content;
+      if(c&&c.trim()){ cfg.llm.model=m; try{ localStorage.setItem("sp_llm_model",m); }catch(_){}
+        window.__llmErr=null; return c.trim(); }
+    }catch(_){}
+  }
+  return null;
+}
 function setLLMProvider(p){
   const P=LLM_PROVIDERS[p]; if(!P) return;
   const u=document.getElementById("llmUrlInput"), m=document.getElementById("llmModelInput");
