@@ -2088,9 +2088,10 @@ function renderOKR(){
     const pos=[ {x:50,y:40}, {x:64,y:66}, {x:36,y:66} ];
     // ordena st per n desc i assigna posicions per superposició natural
     const ord=[...st].sort((a,b)=>b.n-a.n);
+    const OKR_CLAU={ onTrack:"en-termini", behind:"en-risc", atRisk:"endarrerit" };
     const circHTML = ord.map((s,i)=>{ const r=R(s.n); const p=pos[i];
       const fill = i===ord.length-1 ? 'rgba(200,172,50,.15)' : 'rgba(255,255,255,.02)';
-      return `<g class="okr-bombolla" tabindex="0" role="img" aria-label="${s.label}: ${s.n} de ${d.total} (${Math.round(s.n/d.total*100)}%)">
+      return `<g class="okr-bombolla" tabindex="0" role="button" aria-label="${s.label}: ${s.n} de ${d.total} (${Math.round(s.n/d.total*100)}%)" onclick="okrLlistaPerEstat('${OKR_CLAU[s.k]||'en-termini'}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();okrLlistaPerEstat('${OKR_CLAU[s.k]||'en-termini'}')}" title="Veure els ${s.label.toLowerCase()}">
         <circle cx="${p.x}" cy="${p.y}" r="${r}" fill="${s.c}" opacity="0.82" stroke="${i===ord.length-1? '#C8AC32':'rgba(255,255,255,.12)'}" stroke-width="1"/>
         <text x="${p.x}" y="${p.y+1}" text-anchor="middle" dominant-baseline="middle" fill="${i===2?'#0B1D32':'#F3F5EF'}" style="font-size:14px;font-weight:800">${Math.round(s.n/d.total*100)}%</text>
       </g>`;
@@ -2118,6 +2119,25 @@ function renderOKR(){
     }).join('');
   }
 }
+// llista d'objectius i resultats clau FILTRATS per estat (obre el drawer)
+function okrLlistaPerEstat(clau){
+  const etiquetes={ "en-termini":["En termini","#80C900"], "en-risc":["En risc","#E4F644"], "endarrerit":["Endarrerit","#C8AC32"] };
+  const [label,color]=etiquetes[clau]||[clau,"#E4F644"];
+  const items=[];
+  OKR.objectives.forEach(o=>{
+    (o.krs||[]).forEach(kr=>{ const st=okrEstat(kr);
+      if(st.clau===clau) items.push({obj:o,kr,p:okrProgresPct(kr)});
+    });
+  });
+  const html=items.length? items.map(it=>`
+    <div style="border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:11px 14px;margin-bottom:8px;border-left:3px solid ${color}">
+      <div class="flex items-center justify-between mb-1"><span class="font-bold">${it.kr.nom}</span><span class="text-xs muted">${it.obj.nom}</span></div>
+      <div class="flex items-center gap-2"><div class="bar-track bg-white/10 h-2 rounded-full overflow-hidden" style="flex:1"><div class="bar" style="width:${it.p==null?0:it.p}%;background:linear-gradient(90deg,${color},#f2d489)"></div></div><span class="mono text-xs">${it.p==null?'—':it.p+'%'}</span></div>
+    </div>`).join('')
+    : `<div class="text-sm muted" style="padding:6px">Cap resultat clau en estat "${label}" ara mateix.</div>`;
+  openDrill(label+' · '+items.length+' KR', (SP.tenant||'SalesPower')+' · '+OKR.periode, html);
+}
+window.okrLlistaPerEstat=okrLlistaPerEstat;
 // llista completa d'objectius i els seus resultats clau (obre el drawer)
 function okrObreLlista(){
   const html=OKR.objectives.map(o=>{
