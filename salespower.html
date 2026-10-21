@@ -2529,7 +2529,26 @@ function renderInsights(){
       variacio>0?"+"+variacio.toFixed(0)+"% vs 6 mesos enrere":variacio.toFixed(0)+"% vs 6 mesos enrere"}"</div></div>`;
   function mxS6(){return Math.max(...s6.map(m=>m.in));}
   document.getElementById("insPC").innerHTML=kpis;
-  document.getElementById("insGrid").innerHTML=insights.map(insCard).join("")||"<p class='text-sm muted'>Cap troballa.</p>";
+  // agrupació per àrea: Vendes (comercial) vs Operació (ERP)
+  const AREA_INS={crm:"Comercial",cli:"Comercial",tendencia:"Comercial",dash:"Comercial",cfg:"Comercial",ins:"Comercial",
+    stock:"Operació",prov:"Operació","ordres-pendents":"Operació","factures-emeses":"Operació","factures-vencudes":"Operació","factures-pagades":"Operació"};
+  const areaDe=it=>it.area||AREA_INS[it.drill]||"Comercial";
+  const grup=it=>areaDe(it)==="Operació"?"Operació":"Comercial";
+  const com=insights.filter(it=>grup(it)==="Comercial");
+  const op =insights.filter(it=>grup(it)==="Operació");
+  const seccio=(titol,llista,dot,color)=>llista.length?`
+    <h3 style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--spgold);margin:22px 0 10px">
+      <span style="width:9px;height:9px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color}66"></span>${titol}
+      <span class="ct" style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 8px;border-radius:99px">${llista.length}</span>
+    </h3>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">${llista.map(insCard).join("")}</div>`:"";
+  document.getElementById("insGrid").innerHTML=
+    seccio("Vendes · CRM",com,"com","#f0a09a")+
+    seccio("Operació · ERP",op,"op","#67b8f0")+
+    (insights.length?"":"<p class='text-sm muted'>Cap troballa.</p>");
+  // text de resum amb el repartiment
+  const tm=document.getElementById("insTime");
+  if(tm) tm.textContent=`analitzat ara · ${insights.length} troballes (${com.length} vendes · ${op.length} operació) · ${SP.series.length} mesos`;
 }
 
 /* reveal + bars + counters genèrics */
