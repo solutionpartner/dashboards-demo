@@ -111,8 +111,8 @@
   .muted{ color:var(--muted); }
   .bar{ height:10px; border-radius:6px; width:0; transition:width 1.3s cubic-bezier(.16,1,.3,1); }
   .barV{ border-radius:6px 6px 2px 2px; margin-top:auto; transition:height 1.2s cubic-bezier(.16,1,.3,1); }
-  /* Widget "Ingressos mensuals": cursor punter (no mà) + explosió de partícules al clic */
-  #incomeChart .clickc, #incomeChart .barV{ cursor:default; }
+  /* Widget "Ingressos mensuals": cursor de DIT a tot el clicable (barres + etiquetes) + explosió de partícules al clic */
+  #incomeChart .clickc, #incomeChart .barV{ cursor:pointer; }
   #incomeChart .barV{ will-change:transform,box-shadow; }
   #incomeChart .clickc:hover .barV{ filter:brightness(1.18); box-shadow:0 0 14px rgba(231,196,125,.35); }
   .eixoY{ display:flex; flex-direction:column; justify-content:space-between; align-items:flex-end; height:190px; font-size:9px; color:var(--muted); padding-right:6px; border-right:1px solid var(--row-line); margin-right:10px; user-select:none; }
