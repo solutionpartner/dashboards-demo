@@ -72,6 +72,7 @@
   .nav-sec::after{ content:""; flex:1; height:1px; background:rgba(255,255,255,.08); margin-left:8px; }
   .nav-sec .ns-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
   .nav a{ display:flex; align-items:center; gap:11px; padding:9px 20px; font-size:13px; color:var(--muted); text-decoration:none; border-left:2px solid transparent; transition:.25s; cursor:pointer; }
+  .nav a:focus-visible{ outline:2px solid rgba(231,196,125,.8); outline-offset:-2px; color:var(--text); }
   .nav a:hover{ color:var(--text); background:rgba(255,255,255,.04); }
   .nav a.act{ color:var(--spgold); border-left-color:var(--spgold); background:rgba(231,196,125,.09); }
   .nav .ic{ width:18px; text-align:center; opacity:.8; }
@@ -1121,7 +1122,7 @@ function pintaMarcaModul(v){
 function go(v){
   document.querySelectorAll(".view").forEach(x=>x.classList.remove("act"));
   document.getElementById("view-"+v).classList.add("act");
-  document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("act",a.dataset.v===v));
+  document.querySelectorAll("#nav a").forEach(a=>{const on=a.dataset.v===v;a.classList.toggle("act",on);if(on)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current");});
   if(typeof pintaMarcaModul==="function") pintaMarcaModul(v);
   document.querySelectorAll(".rx").forEach(el=>el.classList.add("in"));
   window.scrollTo({top:0,behavior:"smooth"});
@@ -2540,7 +2541,7 @@ function renderInsights(){
   const com=insights.filter(it=>grup(it)==="Comercial");
   const op =insights.filter(it=>grup(it)==="Operació");
   const seccio=(titol,llista,dot,color)=>llista.length?`
-    <h3 style="grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--spgold);margin:18px 0 2px">
+    <h3 style="grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--spgold);margin:18px 0 4px;padding-bottom:8px;border-bottom:1px solid rgba(231,196,125,.25)">
       <span style="width:9px;height:9px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color}66"></span>${titol}
       <span class="ct" style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 8px;border-radius:99px">${llista.length}</span>
     </h3>
