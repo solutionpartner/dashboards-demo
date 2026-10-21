@@ -800,14 +800,23 @@
           <div class="setRow">
             <div>
               <div class="text-sm font-semibold mb-1">LLM extern (opcional)</div>
-              <div class="text-xs muted">Per respostes combinades amb dades de fora del client (mercat, sector, tendències). Endpoint OpenAI-compatible.</div>
+              <div class="text-xs muted">Per respostes combinades amb dades de fora del client (mercat, sector, tendències). Endpoint OpenAI-compatible. Tria un proveïdor amb model gratuït:</div>
             </div>
           </div>
+          <div class="setRow" style="flex-wrap:wrap">
+            <button class="chip" style="border-color:rgba(231,196,125,.5)" onclick="setLLMProvider('openrouter')">OpenRouter ⭐ (gratuït, fàcil)</button>
+            <button class="chip" onclick="setLLMProvider('glm')">Zhipu · GLM</button>
+            <button class="chip" onclick="setLLMProvider('groq')">Groq</button>
+            <button class="chip" onclick="setLLMProvider('mistral')">Mistral AI</button>
+            <button class="chip" onclick="setLLMProvider('openai')">OpenAI</button>
+          </div>
           <div class="setRow">
-            <input id="llmUrlInput" type="text" placeholder="https://open.bigmodel.cn/api/paas/v4"
+            <label class="text-xs muted" style="flex:0 0 80px">URL</label>
+            <input id="llmUrlInput" type="text" placeholder="via un selector de proveïdor"
                    style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
           </div>
           <div class="setRow">
+            <label class="text-xs muted" style="flex:0 0 80px">API key</label>
             <input id="llmKeyInput" type="password" placeholder="API key"
                    style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
           </div>
@@ -816,9 +825,10 @@
             <button class="btn primary" onclick="saveLLM()">Desa</button>
           </div>
           <div class="setRow">
+            <label class="text-xs muted" style="flex:0 0 80px">Model</label>
             <input id="llmModelInput" type="text" value="glm-4.7-flash"
                    style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
-            <span class="text-xs muted">Model (per defecte glm-4.7-flash, gratuït de Zhipu)</span>
+            <span class="text-xs muted">model · gratuït</span>
           </div>
         </div>
 
@@ -3259,6 +3269,23 @@ async function askGlobalLLM(q, context){
     return c?c.trim():null;
   }catch(e){ return null; }
 }
+/* preseleccions de proveïdor LLM — el model gratuït de cada servei */
+const LLM_PROVIDERS={
+  openrouter:{ url:"https://openrouter.ai/api/v1", model:"deepseek/deepseek-chat-v3-0324:free" },
+  glm:{ url:"https://open.bigmodel.cn/api/paas/v4", model:"glm-4.7-flash" },
+  groq:{ url:"https://api.groq.com/openai/v1", model:"llama-3.3-70b-versatile" },
+  mistral:{ url:"https://api.mistral.ai/v1", model:"mistral-small-latest" },
+  openai:{ url:"https://api.openai.com/v1", model:"gpt-4o-mini" }
+};
+function setLLMProvider(p){
+  const P=LLM_PROVIDERS[p]; if(!P) return;
+  const u=document.getElementById("llmUrlInput"), m=document.getElementById("llmModelInput");
+  if(u) u.value=P.url;
+  if(m) m.value=P.model;
+  const st=document.getElementById("llmState");
+  if(st) st.textContent="Proveïdor seleccionat. Posa l'API key i prem Desa.";
+}
+window.setLLMProvider=setLLMProvider;
 function saveLLM(){
   const url=document.getElementById("llmUrlInput").value.trim();
   const key=document.getElementById("llmKeyInput").value.trim();
