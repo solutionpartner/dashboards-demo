@@ -338,8 +338,9 @@
         <div class="grid grid-cols-9 mt-2 text-[9px] muted text-center" id="incomeLabels"></div>
         <div id="incomeTotals" style="margin:8px 0 0 38px"></div>
       </div>
-      <div class="card"><div class="kicker mb-1">Cobraments</div><h2 class="text-lg font-bold mb-1">Estat facturació</h2>
-        <div class="relative w-32 h-32 mx-auto my-4"><svg viewBox="0 0 100 100" class="w-32 h-32" style="transform:rotate(-90deg)">
+      <div class="card clickc" data-drill="factures-pagades" title="Veure les factures cobrades"><div class="kicker mb-1">Cobraments</div><h2 class="text-lg font-bold mb-1">Estat facturació</h2>
+        <div class="relative w-32 h-32 mx-auto my-4">
+          <svg viewBox="0 0 100 100" class="w-32 h-32" style="transform:rotate(-90deg)">
           <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="12"/>
           <circle id="donut" cx="50" cy="50" r="44" fill="none" stroke="var(--spgold)" stroke-linecap="round" stroke-width="12" stroke-dasharray="276.5" stroke-dashoffset="276.5"/></svg>
           <div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-3xl font-extrabold" id="pct">0%</span><span class="text-[10px] muted">cobrat</span></div></div>
@@ -3575,7 +3576,6 @@ setTimeout(()=>{
 cards();tables();chain();income();bars();
 setupDragReorder(); startLive();
 document.querySelectorAll(".rx").forEach(el=>el.classList.add("in"));
-document.addEventListener("click",e=>{const b=e.target.closest(".clickc");if(b){const d=b.dataset.drill;if(d)document.querySelector(`.card[data-drill="${d}"]`)&&openDrill(d,"-","-");}});
 </script>
 </body>
 </html>
