@@ -92,12 +92,7 @@
   .baios-brand .brand-title small{ display:block; font-size:9.5px; font-weight:600; letter-spacing:.22em; text-transform:uppercase; color:rgba(231,196,125,.7); margin-top:1px; }
   .side-sub{ margin-top:7px; font-size:11px; font-weight:700; letter-spacing:.04em; color:var(--spgold); text-align:center; white-space:nowrap; }
   .logo img{ max-width:195px; height:auto; display:block; }
-  .peerSw{ display:none; margin:6px 18px 10px; padding:8px 12px; border-radius:11px; border:1px solid rgba(163,255,0,.7);
-    background:linear-gradient(135deg,#c9ff3d,#8ee000); color:#0B1D32; font-family:'Inter',sans-serif; font-weight:700; font-size:12px;
-    cursor:pointer; width:auto; align-items:center; justify-content:center; gap:6px; text-align:center; line-height:1.25; box-shadow:0 6px 18px -6px rgba(170,255,0,.55); transition:.2s; }
-  .peerSw:hover{ filter:brightness(1.05); box-shadow:0 8px 22px -4px rgba(170,255,0,.75); transform:translateY(-1px); }
-  .peerSw .t b{ font-weight:800; }
-  .peerSw.on{ display:flex; }
+  /* botó ⇄ de canvi CRM/ERP retirat: la navegació unificada ja ho integra al menú */
   .client-tag{ text-align:center; padding:0 14px 14px; }
   .client-tag .tag{ font-size:10px; color:var(--muted); letter-spacing:.04em; }
   .client-tag .name{ font-size:12.5px; font-weight:700; color:var(--text); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -274,7 +269,6 @@
     <div class="brand-title">SalesPower &amp; BusinessPower<small>Integrated</small></div>
     <div class="side-sub" id="sideSub">SalesPower · Gestió de clients</div>
   </div>
-  <button class="peerSw" id="peerSw" onclick="goPeer()" title="Canvia de mòdul" data-mode="crm"><span class="ic">⇄</span><span class="t"><span id="peerAlt">→ BusinessPower</span></span></button>
   <div class="client-tag">
     <div class="tag">fet a mida per a</div>
     <div class="name" id="sideClient">—</div>
@@ -2675,18 +2669,16 @@ function applyTheme(){
 function applyLogo(){
   // BAIOS és la marca fixa del sistema de control; la sub-marca es calcula des del mòdul actiu
   const esDark = (typeof cfg!=="undefined") ? (cfg.theme!=="light") : true;
+  // logo principal del Dashboard central (variant sobre el fons de la web)
+  const dl=document.getElementById("dashLogo");
+  if(dl) dl.src = BAIOS_WEB_BIG;
   const c=document.getElementById("sideClient");
   if(c) c.textContent = cfg.client;
   if(typeof aplicaSubMarca==="function"){ const act=document.querySelector("#nav a.act"); aplicaSubMarca(act?act.dataset.v:null); }
 }
-/* botó de canvi CRM<->ERP: només visible si el tenant té ambdós mòduls */
+/* botó ⇄ retirat (la navegació unificada integra el canvi de mòdul al menú) */
 function applyPeerButton(){
-  const btn=document.getElementById("peerSw");
-  if(btn){
-    const mods=(typeof SP!=="undefined"&&SP.moduls)||cfg.moduls||"";
-    const teAmbdos = /crm/.test(mods) && /erp/.test(mods);
-    btn.classList.toggle("on", !!teAmbdos);
-  }
+  // no-op: ja no hi ha botó de canvi CRM/ERP
 }
 /* navega al dashboard del producte germà (mateix directori, sufix tolerant: -dashboard.html, .html, etc.) */
 
@@ -2734,43 +2726,13 @@ function aplicarModuls(){
     }
     sec.style.display = visible ? "" : "none";
   });
-  const peer=document.getElementById("peerSw");
-  if(peer){ peer.style.display = dos ? "" : "none"; if(peer.dataset) peer.dataset.mode=mode; }
-  const alt=document.getElementById("peerAlt");
-  if(alt){ alt.textContent = dos ? (mode==="crm"?"→ BusinessPower":(mode==="erp"?"→ SalesPower":"Mode · tots")) : ""; }
-  if(window.applyPeerButton) try{ applyPeerButton(); }catch(e){}
+  // (botó ⇄ de canvi CRM/ERP retirat — la navegació unificada ho integra al menú)
   try{ applyLogo(); }catch(e){}
 }
 window.aplicarModuls=aplicarModuls;
 function goPeer(){
-  const saved=(location.protocol!=="file:") ? (localStorage.getItem("sp_peer_url")||cfg.peerUrl||"") : "";
-  if(saved){ location.href=saved; return; }
-  // Si el tenant té ambdós mòduls, alterna el mode vist DINS del mateix entorn (adéu redirects).
-  const mods=(typeof SP!=="undefined"&&SP.moduls)||cfg.moduls||"";
-  const te=(m)=>new RegExp("\\b"+m+"\\b").test(mods);
-  const crm=te("crm"), erp=te("erp");
-  if(crm&&erp){
-    // mode actual: quin subset està vist. Toggle càrrega del mòdul actiu.
-    const alt=document.getElementById("peerAlt");
-    if(alt){
-      const mode=alt.dataset.mode||"crm";
-      localStorage.setItem("sp_mode", mode==="crm"?"erp":"crm");
-      aplicarModuls();
-      go("dash");
-    }
-    return;
-  }
-  // Només un mòdul contractat: navega al producte germà (si existeix) o no fa res.
-  const path=location.pathname.split("/").pop()||"";
-  const dir=location.pathname.slice(0, location.pathname.length-path.length)||"./";
-  const esErp = /(?:^|\/)erp(?:\/|$)/.test(location.pathname) || /^businesspower/i.test(path);
-  const pBase = /^(salespower|businesspower)/i.exec(path);
-  const aqui  = pBase ? pBase[1].toLowerCase() : (esErp ? "businesspower" : "salespower");
-  const germa = aqui==="businesspower" ? "salespower" : "businesspower";
-  const sufix = pBase ? path.slice(pBase[0].length) : "-dashboard.html";
-  let dest = dir + germa + sufix;
-  if(!pBase) dest = dir + (esErp ? "salespower" : "businesspower") + "-dashboard.html";
-  location.href = dest;
+  // Botó ⇄ retirat (la navegació unificada integra el canvi de mòdul al menú).
+  // Es manté com a no-op per compatibilitat amb enllaços antics.
 }
 window.peerToggle=function(mode){ localStorage.setItem("sp_mode",mode); aplicarModuls(); go("dash"); };
 const PEER_URL = "";
