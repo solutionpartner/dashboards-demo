@@ -816,9 +816,9 @@
             <button class="btn primary" onclick="saveLLM()">Desa</button>
           </div>
           <div class="setRow">
-            <input id="llmModelInput" type="text" value="glm-4-flash"
+            <input id="llmModelInput" type="text" value="glm-4.7-flash"
                    style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
-            <span class="text-xs muted">Model (per defecte glm-4-flash, gratuït de Zhipu)</span>
+            <span class="text-xs muted">Model (per defecte glm-4.7-flash, gratuït de Zhipu)</span>
           </div>
         </div>
 
@@ -3101,28 +3101,97 @@ function localAnswer(q){
   if(/proveidor|compra|ordre/.test(s)){
     return SP.proveidors.map(p=>`· ${p.ord} — ${p.nom} — ${fmtC(p.import)} € (${p.estat})`).join("\n");
   }
-  /* orientació a seccions + conversa social (no requereix LLM extern) */
-  const navBtn=(lbl,mod)=>`<button class="chip" onclick="go('${mod}')" style="margin-top:8px;margin-right:6px">${lbl}</button>`;
-  const cap=(arr)=>"Coneix les teves dades: "+arr.map(x=>"<b>"+x+"</b>").join(", ")+". Puc combinar-les amb coneixement extern si hi ha un LLM connectat a Configuració.";
-  if(/^hola|^ei\b|^hey\b|^bon dia|^bona tarda|bona nit|^què tal|^com va/.test(s))
-    return `Hola! Sóc <b>l'assistent de negocis</b> del Business AI OS de <b>${cfg.client}</b>. Puc respondre't sobre la teva activitat comercial i operativa: ${cap(["facturació","cobraments","tendències","clients","stock","pipeline","proveïdors"])}`;
-  if(/gràcies|gracies|merci|thx|thank|visca|ok gràcies/.test(s))
-    return `De res! Quan vulguis, pregunta'm per ${cap(["què has facturat aquest mes","qui et deu diners","stock baix","el pipeline"])}`;
-  if(/qui ets|què ets|qui ets tu|que ets|que pots fer|ajuda|help|què pots|que pots/.test(s))
-    return `Sóc l'<b>assistent d'IA</b> dels dashboards SolutionPartner (Business AI OS). Analitzo les dades del client i les tradueixo en respostes i accions. T'ajudo amb: ${cap(["facturació","pendents de cobrar","tendència d'ingressos","clients","stock","pipeline","proveïdors"])}. Vols que t'ho mostri?`;
-  if(/informe|report|resum general|complet de l'empresa|estat de l'empresa|export/.test(s))
-    return `Els informes del negoci es generen a la secció <b>Reporting</b>. Obre-la i escull el format (report descriptiu de l'estat de la companyia) i baixa CSV, JSON, TXT, PDF o PPTX per a reunions.`+navBtn("Obre Reporting","report")+navBtn("Activa Pro (PDF/PPT)","cfg");
-  if(/automatitzac|automatizac|flux autom|nia de|campanya|bots\b/.test(s))
-    return `Aquí tens les <b>automatitzacions</b> actives i proposades pel sistema. Cada una enllaça amb el workflow real de l'empresa: cobraments, seguiment de clients, alertes de stock, reports automàtics.`+navBtn("Obre Automatitzacions","autos");
-  if(/configurac|configure|adjust|parametr|personalitzar|tema|idioma|notificacion/.test(s))
-    return `A <b>Configuració</b> pots gestionar el compte, els mòduls contractats, el tema, les notificacions i <b>connectar un LLM extern</b> (URL + API key, ex. GLM/OpenAI/OpenRouter) perquè respongui amb coneixement de mercat.`+navBtn("Obre Configuració","cfg");
-  if(/insight|intel·ligenc|troball|recomanac|què ha detectat|què veu/.test(s))
-    return `A <b>Insights IA</b> hi ha les troballes de l'anàlisi automàtica, agrupades entre comercial (Vendes · CRM) i operativa (Operació · ERP): riscos, concentracions, tendències i oportunitats.`+navBtn("Obre Insights IA","ins");
-  if(/dashboard|principal|panell|inici|central|home/.test(s))
-    return `El <b>dashboard central</b> de ${cfg.client} resumeix la salut del negoci, els KPI principals (facturació, marge, cobrament, ticke mitjà) i les tendències.`+navBtn("Obre el Dashboard","dash");
-  /* resposta genèrica */ 
+    /* resposta genèrica */
   return `T'he entès com a: "<i>${q}</i>".\nPuc respondre sobre <b>facturació, cobraments pendents, tendències, clients, stock i pipeline</b>. Prova una de les recomanades, o pregunta-ho amb altres paraules.`;
 }
+
+/* FAQ — respostes preconfigurades amb VARIACIONS perquè sembli conversa real (zero cost, instantani,
+   consistent; l'LLM només quan calgui). Rotació determinista perquè no repeteixi sempre la mateixa frase. */
+let faqTurn=0;
+function faqAnswer(q){
+  const s=q.toLowerCase();
+  const n=()=>faqTurn++;
+  const navBtn=(lbl,mod)=>`<button class="chip" onclick="go('${mod}')" style="margin-top:8px;margin-right:6px">${lbl}</button>`;
+  const tria=(arr,key)=>arr[(faqTurn + (key? s.length : 0)) % arr.length];
+  /* salutació */
+  if(/^(hola|ei|ey|hey|bon dia|bona tarda|bona nit|què tal|com va|hola!)\b/.test(s) && /hol|ei|hey|bon|tal|va/.test(s)&&!/(factura|stock|cobr|client|informe|config)/.test(s)){
+    n();
+    return tria([
+      `Hola! Què et puc explicar de <b>${cfg.client}</b> avui? Et puc ajudar amb ${cap2("facturació, cobraments, tendències, clients, stock o el pipeline")}.`,
+      `Ei, què tal! Sóc l'assistent del Business AI OS de <b>${cfg.client}</b>. Vols que et repassi l'estat del negoci o tens alguna consulta en concret?`,
+      `Hola! Aquí tinc totes les dades de ${cfg.client}. Pregunta'm el que vulguis — facturació, deutes pendents, stock, tendències...`
+    ],s);
+  }
+  /* agraïment */
+  if(/gràcies|gracies|merci|thx|thank|visca/.test(s)&&!/proveïdor|compra/.test(s)){
+    n();
+    return tria([
+      `De res! Si necessites res més, aquí m'hi tinc.`,
+      `Per a això estic. Qualsevol altra cosa, digues.`,
+      `Cap problema. Pregunta quan vulguis.`
+    ],s);
+  }
+  /* qui ets / què pots fer */
+  if(/qui (ets|són)|què (ets|pots)|que pots|ajuda|help|com pots ajudar|funcions/.test(s)){
+    n();
+    return tria([
+      `Sóc <b>l'assistent d'IA de ${cfg.client}</b> (Business AI OS de SolutionPartner). Analitzo les dades reals del negoci i les tradueixo en respostes clares: et parlo de facturació, cobraments pendents, tendències, clients, stock, pipeline i automatitzacions. Vull que em coneguis per a fer-te la feina més fàcil.`,
+      `Em puc considerar el teu copilot de dades: llegeixo el mateix que veus al dashboard i t'ho explico en conversa. Pregunta'm per qualsevol xifra del negoci, o digues-me què vols fer i t'hi acompanyo.`
+    ],s);
+  }
+  /* informes / reporting */
+  if(/informe|report|resum general|complet de l'empresa|estat de l'empresa|export|baixa.*(pdf|csv|json|txt)/.test(s)){
+    n();
+    return tria([
+      `Els informes es generen a la secció <b>Reporting</b>. Hi trobaràs un report descriptiu de l'estat de l'empresa i podràs baixar-lo en CSV, JSON, TXT, i en format PDF o PPTX per a reunions (pla Pro).`+navBtn("Obre Reporting","report")+navBtn("Activa Pro","cfg"),
+      `Per generar un informe, ves a <b>Reporting</b> — esculls el format i el tens a punt per baixar o presentar. Si vols el PDF/PPTX ho feim amb el pla Pro.`+navBtn("Obre Reporting","report")
+    ],s);
+  }
+  /* automatitzacions */
+  if(/automatitzac|automatizac|flux autom|nia de|campanya|bot\b|què automate|cobraments.*autom/.test(s)){
+    n();
+    return tria([
+      `Les <b>automatitzacions</b> de ${cfg.client} estan a la seva secció: cada una enllaça amb un workflow real (cobraments, seguiment de clients, alertes de stock, reports automàtics) i et diu si està activa o només proposada.`+navBtn("Obre Automatitzacions","autos"),
+      `A la secció d'<b>Automatitzacions</b> veus quins processos ja es mouen sols i quins et podríem activar. Pensa-hi: qualsevol tasca repetitiva és candidata.`+navBtn("Obre Automatitzacions","autos")
+    ],s);
+  }
+  /* configuració */
+  if(/configurac|configure|personalitz|tema|idioma|notificacion|connectar.*llm|api key/.test(s)){
+    n();
+    return tria([
+      `A <b>Configuració</b> gestiones el compte, els mòduls, el tema, les notificacions i el connector d'LLM (perquè el xat parli amb coneixement de mercat). Tot ben endreçat allà.`+navBtn("Obre Configuració","cfg"),
+      `Totes les preferències del sistema es toquen a <b>Configuració</b>: mòduls actius, notificacions, idioma/tema i la connexió amb el model d'IA.`+navBtn("Obre Configuració","cfg")
+    ],s);
+  }
+  /* insights */
+  if(/insight|intel·ligenc|troball|recomanac|què ha detectat|què veu|patrons/.test(s)){
+    n();
+    return tria([
+      `A <b>Insights IA</b> tens les troballes de l'anàlisi automàtica, separades entre comercial (Vendes · CRM) i operativa (Operació · ERP): riscos, concentracions, tendències i oportunitats, cada una amb la seva acció recomanada.`+navBtn("Obre Insights IA","ins"),
+      `El nostre motor detecta patrons i hi posa cara: dependències de clients grans, stock que es queda curt, factures que s'acaben de vèncer... Tot a <b>Insights IA</b>, agrupat per àrea.`+navBtn("Obre Insights IA","ins")
+    ],s);
+  }
+  /* dashboard / general */
+  if(/dashboard|principal|panell|inici|central|home|què és això|per a què serve|què fa aquest/.test(s)){
+    n();
+    return tria([
+      `El <b>dashboard central</b> de ${cfg.client} és la fotografia del negoci: salut global, facturació, marge, cobraments i tendències en una ullada.`+navBtn("Obre el Dashboard","dash"),
+      `Tot comença al <b>dashboard central</b>: els KPI que primer vols saber del negoci i l'accés a cada àrea. A partir d'aquí, cada mòdul entra en més detall.`+navBtn("Obre el Dashboard","dash")
+    ],s);
+  }
+  /* preus / contractació */
+  if(/preu|preu|quant (costa|val)|subscripci|quota|client|premium|tarifa|cost/.test(s)&&!/deute|client.*deu/.test(s)){
+    n();
+    return tria([
+      `El sistema té dos nivells: la versió <b>estàndard</b> (dashboard, dades, automatitzacions i export CSV/JSON/TXT incloses) i el pla <b>Pro</b> (informes PDF i presentacions PPT per a reunions, +49€/mes). Tots els detalls a Configuració.`+navBtn("Veure plans","cfg"),
+      `La majoria de funcionalitats van incloses. El que afegeix valor és el <b>Pro</b> (49€/mes): et genera el report en PDF i la presentació PPT perquè no hagis de fer-la tu.`+navBtn("Obre Configuració","cfg")
+    ],s);
+  }
+  return null;
+}
+/* cap2 — ajuda de la capa FAQ */
+function cap2(contingut){ return contingut; }
+
 /* ===== CAPA RAG: recuperació + predicció de patrons/impactes + LLM global ===== */
 /* 1) RETRIEVER — construeix un "context" llegible amb els fragments rellevants de les
    dades del client per a una pregunta donada. El context es passa a l'LLM global o
@@ -3193,7 +3262,7 @@ async function askGlobalLLM(q, context){
 function saveLLM(){
   const url=document.getElementById("llmUrlInput").value.trim();
   const key=document.getElementById("llmKeyInput").value.trim();
-  const model=(document.getElementById("llmModelInput")?.value.trim())||"glm-4-flash";
+  const model=(document.getElementById("llmModelInput")?.value.trim())||"glm-4.7-flash";
   const st=document.getElementById("llmState");
   let ok=true, msg="";
   if(!url){ ok=false; msg="Indica la URL de l'endpoint (ex. https://open.bigmodel.cn/api/paas/v4 per GLM)"; }
@@ -3217,7 +3286,7 @@ function setupNotifyInputs(){
   const lu=document.getElementById("llmUrlInput"), lk=document.getElementById("llmKeyInput"), lm=document.getElementById("llmModelInput");
   if(lu) lu.value=localStorage.getItem("sp_llm_url")||"";
   if(lk) lk.value=localStorage.getItem("sp_llm_key")||"";
-  if(lm) lm.value=localStorage.getItem("sp_llm_model")||"glm-4-flash";
+  if(lm) lm.value=localStorage.getItem("sp_llm_model")||"glm-4.7-flash";
 }
 function saveNotify(){
   const w=document.getElementById("notifyWebhookInput").value.trim(), t=document.getElementById("notifyToInput").value.trim();
@@ -3367,6 +3436,7 @@ async function sendChat(){
   // RAG: 0) dataQA determinista (xifres per any/mes — mai LLM) · 1) baiós · 2) LLM global
   let ans=null, extra="";
   ans=dataQA(q);
+  if(!ans){ ans=faqAnswer(q); }
   if(!ans){
     const baios=await askBaios(q);
     if(baios){ ans=baios; }
