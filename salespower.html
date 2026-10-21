@@ -142,8 +142,11 @@
   #overlay.on{ opacity:1; pointer-events:auto; }
 
   /* insight cards */
-  .ins{ border-radius:14px; padding:16px; border:1px solid var(--row-line); background:rgba(255,255,255,.035); transition:.3s; cursor:pointer; }
+  .ins{ border-radius:14px; padding:14px 16px; border:1px solid var(--row-line); background:rgba(255,255,255,.035); transition:.3s; cursor:pointer; display:flex; flex-direction:column; gap:6px; min-height:118px; }
   .ins:hover{ border-color:var(--border-strong); background:rgba(231,196,125,.05); transform:translateY(-2px); }
+  .ins .ins-expl{ display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.45; }
+  .ins .ins-act{ display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; white-space:normal; }
+  .ins .ins-cos{ flex:1; }
   .auto{ border-radius:14px; padding:18px; border:1px solid var(--row-line); background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,.02)); transition:.3s; display:flex; flex-direction:column; gap:10px; }
   .auto.on{ border-color:rgba(231,196,125,.45); background:linear-gradient(160deg,rgba(231,196,125,.1),rgba(255,255,255,.02)); }
   .auto .a-ico{ font-size:26px; line-height:1; }
@@ -505,7 +508,7 @@
     <p class="text-sm muted mb-6 max-w-2xl">Aquesta capa analitza les dades del tenant i en **deriva patrons, riscos i oportunitats**. Cada troballa és una recomanació accionable — no text decoratiu.</p>
     <div class="grid md:grid-cols-2 gap-3 mb-6" id="insPC"></div>
     <h2 class="text-lg font-bold mb-2">Totes les troballes</h2>
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3" id="insGrid"></div>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3" id="insGrid"></div>
   </section>
 
   <!-- ======== AUTOMATITZACIONS ======== -->
@@ -1149,10 +1152,10 @@ function insCard(it){
   const sevColor={alerta:"b-red",risc:"b-orange",oportunitat:"b-gold",info:"b-blue"};
   const d=typeof it.d==="function"?it.d():it.d;
   return `<div class="ins" data-drill="${it.drill||it.goto}" style="--i:0">
-    <div class="flex items-center justify-between mb-2"><span class="sev ${sevColor[it.sev]||'b-blue'}">${it.sev.toUpperCase()}</span><span class="text-white/30">⭢</span></div>
-    <div class="text-sm font-bold mb-1">${it.t}</div>
-    <div class="text-xs muted mb-2 ins-expl">${d}</div>
-    <div class="text-xs" style="color:var(--spgold)">→ ${it.act}</div></div>`;
+    <div class="flex items-center justify-between mb-1"><span class="sev ${sevColor[it.sev]||'b-blue'}">${it.sev.toUpperCase()}</span><span class="text-white/30">⭢</span></div>
+    <div class="text-sm font-bold mb-1 ins-cos">${it.t}</div>
+    <div class="text-xs muted mb-1 ins-expl">${d}</div>
+    <div class="text-xs ins-act" style="color:var(--spgold)">→ ${it.act}</div></div>`;
 }
 
 function tables(){
@@ -2537,15 +2540,15 @@ function renderInsights(){
   const com=insights.filter(it=>grup(it)==="Comercial");
   const op =insights.filter(it=>grup(it)==="Operació");
   const seccio=(titol,llista,dot,color)=>llista.length?`
-    <h3 style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--spgold);margin:22px 0 10px">
+    <h3 style="grid-column:1/-1;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--spgold);margin:18px 0 2px">
       <span style="width:9px;height:9px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color}66"></span>${titol}
       <span class="ct" style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 8px;border-radius:99px">${llista.length}</span>
     </h3>
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-3">${llista.map(insCard).join("")}</div>`:"";
+    ${llista.map(insCard).join("")}`:"";
   document.getElementById("insGrid").innerHTML=
     seccio("Vendes · CRM",com,"com","#f0a09a")+
     seccio("Operació · ERP",op,"op","#67b8f0")+
-    (insights.length?"":"<p class='text-sm muted'>Cap troballa.</p>");
+    (insights.length?"":"<p class='text-sm muted' style='grid-column:1/-1'>Cap troballa.</p>");
   // text de resum amb el repartiment
   const tm=document.getElementById("insTime");
   if(tm) tm.textContent=`analitzat ara · ${insights.length} troballes (${com.length} vendes · ${op.length} operació) · ${SP.series.length} mesos`;
