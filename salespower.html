@@ -182,10 +182,10 @@
   .gspin{ display:none; }
   @keyframes gsp{ to{transform:rotate(360deg)} }
   .crumb{ display:none; align-items:center; gap:9px; margin-top:10px; padding:0 0 6px; font-size:13px; color:var(--text); font-weight:600; }
-  #modBar{ display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:14px; padding:6px 0 2px; }
+  #modBar{ display:flex; align-items:center; gap:8px; margin-top:14px; padding:6px 0 2px; }
   #modBar img{ height:26px; width:auto; object-fit:contain; display:block; visibility:hidden; }
   #modBar .mb-name{ font-size:12px; font-weight:700; letter-spacing:.05em; color:var(--spgold); }
-  #modBar::before{ content:""; flex:1; }
+  #modBar::after{ content:""; flex:1; }
   .crumb.on{ display:flex; }
   .crumbbtn{ width:34px; height:34px; border-radius:9px; border:1.5px solid var(--spgold); background:linear-gradient(135deg,rgba(231,196,125,.18),rgba(231,196,125,.06)); color:var(--spgold); font-size:19px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:.2s; box-shadow:0 6px 18px -8px rgba(0,0,0,.45); }
   .crumbbtn:hover{ color:#0B1D32; background:var(--spgold); transform:translateX(-2px); }
