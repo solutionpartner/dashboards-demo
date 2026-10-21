@@ -3193,8 +3193,8 @@ function faqAnswer(q){
       `Tot comença al <b>dashboard central</b>: els KPI que primer vols saber del negoci i l'accés a cada àrea. A partir d'aquí, cada mòdul entra en més detall.`+navBtn("Obre el Dashboard","dash")
     ],s);
   }
-  /* preus / contractació */
-  if(/preu|preu|quant (costa|val)|subscripci|quota|client|premium|tarifa|cost/.test(s)&&!/deute|client.*deu/.test(s)){
+  /* preus / contractació — només si realment pregunta per preus (client NO: és un terme de dades) */
+  if(/^quant (costa|val)|subscripci|premium|tarifa|cost|preu\b|plans? de preu/.test(s)&&!/llist|qui són|quins clients|deute|client.*deu/.test(s)){
     n();
     return tria([
       `El sistema té dos nivells: la versió <b>estàndard</b> (dashboard, dades, automatitzacions i export CSV/JSON/TXT incloses) i el pla <b>Pro</b> (informes PDF i presentacions PPT per a reunions, +49€/mes). Tots els detalls a Configuració.`+navBtn("Veure plans","cfg"),
@@ -3523,6 +3523,7 @@ async function sendChat(){
   chatState.busy=true; inp.value="";
   addMsg(q,"u");
   think(true);
+  try{
   // RAG: 0) dataQA determinista (xifres per any/mes — mai LLM) · 1) baiós · 2) LLM global
   let ans=null, extra="";
   ans=dataQA(q);
@@ -3549,7 +3550,13 @@ async function sendChat(){
   const el=addMsg(ans.replace(/\n/g,"<br/>"),"a", extra);
   const btn=el&&el.querySelector("#chatDrillBtn");
   if(btn) btn.addEventListener("click",()=>openDrill("Pendent de cobrar","Factures",bodyFact(pen)));
-  chatState.busy=false; renderChips();
+  }catch(e){
+    /* si falla qualsevol capa interna (LLM, predict...), respon amb cortesia però mai encallar l'estat */
+    addMsg("Ho sento, no he pogut respondre ara mateix. Torna a preguntar-ho amb altres paraules, si et plau.","a");
+    window.__chatErr=(e&&e.message)||String(e);
+  }finally{
+    chatState.busy=false; renderChips();
+  }
 }
 window.toggleChat=toggleChat; window.sendChat=sendChat; window.renderChips=renderChips;
 window.clearHistory=clearHistory;
