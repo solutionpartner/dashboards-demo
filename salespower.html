@@ -3123,8 +3123,8 @@ function faqAnswer(q){
   const n=()=>faqTurn++;
   const navBtn=(lbl,mod)=>`<button class="chip" onclick="go('${mod}')" style="margin-top:8px;margin-right:6px">${lbl}</button>`;
   const tria=(arr,key)=>arr[(faqTurn + (key? s.length : 0)) % arr.length];
-  /* salutació */
-  if(/^(hola|ei|ey|hey|bon dia|bona tarda|bona nit|què tal|com va|hola!)\b/.test(s) && /hol|ei|hey|bon|tal|va/.test(s)&&!/(factura|stock|cobr|client|informe|config)/.test(s)){
+  /* salutació — NOMÉS si la frase és una salutació curta; si porta una pregunta darrere, es deixa passar a les capes següents */
+  if(s.trim().length<30 && /^(hola|ei|ey|hey|bon dia|bona tarda|bona nit|què tal|com va|hola!)\b/.test(s) && /hol|ei|hey|bon|tal|va/.test(s)&&!/(factura|stock|cobr|client|informe|config)/.test(s)){
     n();
     return tria([
       `Hola! Què et puc explicar de <b>${cfg.client}</b> avui? Et puc ajudar amb ${cap2("facturació, cobraments, tendències, clients, stock o el pipeline")}.`,
