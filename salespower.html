@@ -286,8 +286,8 @@
     <a data-v="crm" data-mod="crm"><span class="ic">🤝</span>CRM &amp; Vendes</a>
     <a data-v="cli"><span class="ic">👥</span>Clients</a>
     <a data-v="fact"><span class="ic">🧾</span>Facturació</a>
+    <div class="nav-sec" data-sec="baios"><span class="ns-dot" style="background:#E7C47D"></span>BAIOS · Intel·ligència i sistema</div>
     <a data-v="ins"><span class="ic">🧠</span>Insights IA <span class="ct" id="insCount"></span></a>
-    <div class="nav-sec" data-sec="baios"><span class="ns-dot" style="background:#E7C47D"></span>BAIOS</div>
     <a data-v="autos"><span class="ic">⚡</span>Automatitzacions <span class="ct" id="autosCount"></span></a>
     <a data-v="report"><span class="ic">📄</span>Reporting <span class="ct" id="reportLock">🔒</span></a>
     <a data-v="cfg"><span class="ic">⚙️</span>Configuració</a>
@@ -498,7 +498,7 @@
   <!-- ======== INSIGHTS IA ======== -->
   <section class="view" id="view-ins">
     <div class="flex items-center justify-between mb-2">
-      <div><div class="kicker">SalesPower · IA analítica</div>
+      <div><div class="kicker">Business AI · Intel·ligència del sistema</div>
         <h1 class="serif text-4xl" style="margin:0">Insights &amp; <span class="shimmer">Intel·ligència</span></h1></div>
       <div class="bdg b-gold" id="insTime">analitzat ara</div>
     </div>
@@ -1017,6 +1017,8 @@ const desPendent=provPend.reduce((s,p)=>s+p.import,0);
 
 /* ===== construir INSIGHTS (regles derivades de les dades) ===== */
 const insights=[];
+/* 0 — INSIGHTS OPERATIUS de BusinessPower (stock, proveïdors, deute, caixa) */
+insights.push(...recomanacionsOperatives());
 /* 1 "veig un patró perquè la seqüència de xifres confirma X" */
 insights.push({
   sev:"info", goto:"dash",
@@ -1048,19 +1050,8 @@ insights.push({
   act:"Fixa un temps màxim per etapa; si una oportunitat s'hi està >20 dies, activa una alerta.",
   drill:"dash"
 });
-const stLowN=stockBajo.length;
-insights.push({sev:stLowN>0?"alerta":"info",goto:"stock",
-  t:`${stLowN} productes amb stock sota mínim`, makeD:()=>stockBajo.map(p=>p.nom+" ("+p.stock+"/"+p.min+")").join(", "),
-  d:()=>`${stockBajo.length} referències per sota del llindar: `+ stockBajo.map(p=>p.nom+" ("+p.stock+"/"+p.min+")").join(", ")+".",
-  act:stLowN>0?"Genera ordre de compra per les referències sota mínim abans de quedar-te sense.":"Stock correcte a totes les referències.",
-  drill:"stock"});
-insights.push({
-  sev: desPendent>15000?"alerta":"info", goto:"prov",
-  t:`Despesa pendent a proveïdors: ${fmtEUR(desPendent)}`,
-  d:`Hi ha ${provPend.length} ordres de compra pendents.`,
-  act:"Revisa el timing de pagament per encaixar amb la liquiditat disponible.",
-  drill:"ordres-pendents"
-});
+
+
 insights.push({
   sev:"oportunitat", goto:"crm", t:`Funnel: ${peWon.length} guanyades vs ${peLost.length} perdudes`,
   d:`Un ${pctCobrat}% de la facturació està cobrat. En vendes, el pipeline obert és de ${fmtEUR(pipeObert)}.`,
@@ -1100,7 +1091,7 @@ function goBack(){
   const dest=_navHist.length?_navHist[_navHist.length-1]:"dash";
   go(dest);
 }
-const MARCA_MODUL={crm:"SalesPower",cli:"SalesPower",fact:"SalesPower",ins:"SalesPower",
+const MARCA_MODUL={crm:"SalesPower",cli:"SalesPower",fact:"SalesPower",ins:"BAIOS",
   stock:"BusinessPower",prov:"BusinessPower",okr:"BusinessPower",rrhh:"BusinessPower",fin:"BusinessPower",
   dash:"BAIOS",autos:"BAIOS",report:"BAIOS",cfg:"BAIOS"};
 function aplicaSubMarca(v){
@@ -1499,6 +1490,55 @@ window.notificarResum=notificarResum;
 /* ===== SALESPOWER: recomanacions comercials (vendre més / no perdre / satisfer) =====
    Derivades de les dades reals del CRM — mai text inventat. Cada recomanació té
    objectiu, severitat (oportunitat/risc) i una acció concreta + punt on mirar. */
+function recomanacionsOperatives(){
+  const recs=[]; const fmtE=(n)=>Math.round(n).toLocaleString("ca-ES");
+  // --- STOCK: immobilitzat i sota mínim ---
+  const valorStockCalc=SP.productes.reduce((a,p)=>a+p.stock*p.preu,0);
+  const stockBajoCalc=SP.productes.filter(p=>p.stock<=p.min);
+  if(stockBajoCalc.length) recs.push({area:"Operació",sev: stockBajoCalc.some(p=>p.stock===0)?"alerta":"info",
+    t:`${stockBajoCalc.length} referències sota mínim (${fmtE(valorStockCalc)} € immobilitzats)`,
+    d:`Les referències ${stockBajoCalc.slice(0,3).map(p=>p.nom).join(", ")} estan per sota del mínim. Stock zero = venda perduda.`,
+    act:"Reordena les referències sota mínim; revisa proveïdors alternatius per als crítics.", drill:"stock"});
+  else recs.push({area:"Operació",sev:"info",t:"Stock correcte a totes les referències",
+    d:"Cap producte està sota el mínim. Bon control d'inventari.",act:"Mantén el punt de reordre actualitzat.",drill:"stock"});
+  // --- PROVEÏDORS: dependència i ordres pendents ---
+  const pend=SP.proveidors.filter(p=>p.estat==="pendent");
+  const totalProv=SP.proveidors.reduce((a,p)=>a+p.import,0);
+  const perProv={}; SP.proveidors.forEach(p=>perProv[p.nom]=(perProv[p.nom]||0)+p.import);
+  const topProv=Object.entries(perProv).sort((a,b)=>b[1]-a[1])[0];
+  if(topProv && totalProv>0){
+    const pct=Math.round(topProv[1]/totalProv*100);
+    if(pct>40) recs.push({area:"Operació",sev:"risc",
+      t:`Dependència de proveïdor: ${topProv[0]} (${pct}% de les compres)`,
+      d:`Si aquest proveïdor falla, la producció/stock se'n ressent molt. Diversifica fonts.`,
+      act:"Busca un segon proveïdor per als productes clau d'aquest proveïdor.",drill:"prov"});
+  }
+  if(pend.length) recs.push({area:"Operació",sev: pend.some(p=>p.import>5000)?"alerta":"info",
+    t:`${pend.length} ordres de compra pendents (${fmtE(pend.reduce((a,p)=>a+p.import,0))} €)`,
+    d:`Tens ${pend.length} ordres a ${pend.map(p=>p.nom).slice(0,3).join(", ")} pendents de rebre. La liquiditat s'hi juga.`,
+    act:"Confirma les dates d'entrega amb els proveïdors pendents.",drill:"ordres-pendents"});
+  // --- DEUTE: antiguitat per edat (factures) ---
+  const venc=SP.factures.filter(f=>f.estat==="vencuda");
+  const emeses=SP.factures.filter(f=>f.estat==="emesa");
+  if(venc.length) recs.push({area:"Operació",sev:"alerta",
+    t:`${fmtE(venc.reduce((a,f)=>a+f.total,0))} € de factures VENÇUDES`,
+    d:`${venc.length} factures en venciment: la caixa està retinguda i el risc de morositat creix amb els dies.`,
+    act:"Passa a reclamació formal les vengudes; activa el recordatori automàtic si no ho està.",drill:"factures-vencudes"});
+  if(emeses.length) recs.push({area:"Operació",sev:"info",
+    t:`${fmtE(emeses.reduce((a,f)=>a+f.total,0))} € emesos pendents de cobrar`,
+    d:"Factures emeses a punt de vèncer. Cada dia sense cobrar és finançament gratis al client.",
+    act:"Revisa si pots escurçar el termini o aplicar descompte per pagament ràpid.",drill:"factures-emeses"});
+  // --- CASH: sèrie d'ingressos ---
+  const ult=SP.series[SP.series.length-1], ant=SP.series[SP.series.length-2];
+  if(ult && ant){
+    const dif=ult.in-ant.in;
+    if(dif<0) recs.push({area:"Operació",sev:"risc",
+      t:`Caiguda d'ingressos el darrer mes (${fmtE(dif)} € vs ${ant.m})`,
+      d:`El darrer mes recapta menys que l'anterior. Si és estacional, planifica; si no, és un senyal.`,
+      act:"Analitza quins clients han comprat menys el darrer mes i contacta'ls.",drill:"tendencia"});
+  }
+  return recs;
+}
 function recomanacionsVendes(){
   const recs=[]; const t=(x)=>String(x||"").toLowerCase();
   // ---------- VENDRE MÉS ----------
