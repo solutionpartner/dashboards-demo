@@ -3088,7 +3088,7 @@ function localAnswer(q){
     let rows=pen.map(f=>`· <b>${f.client}</b> — ${fmtC(f.total)} € (${f.estat})`).join("\n");
     return `Hi ha <b>${pen.length}</b> factures pendents o vençudes per <b>${fmtC(tot)} €</b> total.\n${rows}\n\nClic sobre qualsevol per veure-la en detall.`;
   }
-  if(/facturat|ingress|mes|venda/.test(s)&&!/deu/.test(s)){
+  if(/factur|ingress|ingrés|mes|venda/.test(s)&&!/deu/.test(s)){
     return `Aquest mes (${mes.m}) s'ha facturat <b>${fmtC(mes.in*1000)} €</b> i s'han cobrat ${fmtC(mes.cob*1000)} €.\nTendència dels últims 6 mesos: <b>${tendencia}</b> (${variacio>0?"+":""}${variacio.toFixed(0)}%).`;
   }
   if(/tend|evoluci|creix|caiguda|baixa|puja/.test(s)){
@@ -3125,8 +3125,8 @@ function faqAnswer(q){
   const n=()=>faqTurn++;
   const navBtn=(lbl,mod)=>`<button class="chip" onclick="go('${mod}')" style="margin-top:8px;margin-right:6px">${lbl}</button>`;
   const tria=(arr,key)=>arr[(faqTurn + (key? s.length : 0)) % arr.length];
-  /* salutació — NOMÉS si la frase és una salutació curta; si porta una pregunta darrere, es deixa passar a les capes següents */
-  if(s.trim().length<30 && /^(hola|ei|ey|hey|bon dia|bona tarda|bona nit|què tal|com va|hola!)\b/.test(s) && /hol|ei|hey|bon|tal|va/.test(s)&&!/(factura|stock|cobr|client|informe|config)/.test(s)){
+  /* salutació — NOMÉS si la frase és una salutació curta; si porta una pregunta de dades darrere, es deixa passar a les capes següents */
+  if(s.trim().length<30 && /^(hola|ei|ey|hey|bon dia|bona tarda|bona nit|què tal|com va|hola!)\b/.test(s) && /hol|ei|hey|bon|tal|va/.test(s)&&!/(factura|stock|cobr|client|informe|config|pipeline|tend|vendes|oportunitat|ingress|deute|proveidor|automatitz|report|insight|objectiu|financ|rrhh|equip|stock|inventari|negoci|empresa)/.test(s)){
     n();
     return tria([
       `Hola! Què et puc explicar de <b>${cfg.client}</b> avui? Et puc ajudar amb ${cap2("facturació, cobraments, tendències, clients, stock o el pipeline")}.`,
