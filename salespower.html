@@ -888,7 +888,9 @@
   <div class="ch-body" id="chatBody"></div>
   <div class="ch-chips" id="chatChips"></div>
   <div class="ch-in">
-    <button class="mic" id="micBtn" onclick="toggleMic()" title="Parla (dictat per veu)" aria-label="Parla">🎤</button>
+    <button class="mic" id="micBtn" onclick="toggleMic()" title="Parla (dictat per veu)" aria-label="Parla">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg>
+    </button>
     <textarea id="chatInput" rows="1" placeholder="Pregunta sobre les dades del client… (Enter per enviar)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
     <button class="send" onclick="sendChat()">➤</button>
   </div>
@@ -3038,7 +3040,7 @@ function think(on){
   if(on){ const t=document.createElement("div"); t.className="think"; t.id="thinkMsg"; t.textContent="📊 analitzant les dades…"; body.appendChild(t); body.scrollTop=body.scrollHeight; return t; }
   const t=document.getElementById("thinkMsg"); if(t) t.remove();
 }
-const CHIPS=["Quant facturat aquest mes?","Qui em deu diners?","Tendència dels ingressos","Quins clients estan al dia?","Stock baix que hem de reposar","Resumeix el pipeline"];
+const CHIPS=["Quant facturat aquest mes?","Qui em deu diners?","Quina és la tendència dels ingressos?","Quins clients estan al dia?","Quin stock baix hem de reposar?","Com va el pipeline?"];
 function renderChips(){
   document.getElementById("chatChips").innerHTML=CHIPS.map(c=>`<button class="chip" onclick="document.getElementById('chatInput').value='${c}';sendChat()">${c}</button>`).join("");
 }
@@ -3141,8 +3143,10 @@ function faqAnswer(q){
       `Cap problema. Pregunta quan vulguis.`
     ],s);
   }
-  /* qui ets / què pots fer */
+  /* qui ets / què pots fer — si hi ha un LLM connectat, passa-li (resposta més natural); si no, preconfigurat */
   if(/qui (ets|són)|què (ets|pots)|que pots|ajuda|help|com pots ajudar|funcions/.test(s)){
+    const llmActiu=!!(cfg&&cfg.llm&&cfg.llm.url&&cfg.llm.key);
+    if(llmActiu) return null;
     n();
     return tria([
       `Sóc <b>l'assistent d'IA de ${cfg.client}</b> (Business AI OS de SolutionPartner). Analitzo les dades reals del negoci i les tradueixo en respostes clares: et parlo de facturació, cobraments pendents, tendències, clients, stock, pipeline i automatitzacions. Vull que em coneguis per a fer-te la feina més fàcil.`,
