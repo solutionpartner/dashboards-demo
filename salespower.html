@@ -3033,6 +3033,38 @@ function renderChips(){
   document.getElementById("chatChips").innerHTML=CHIPS.map(c=>`<button class="chip" onclick="document.getElementById('chatInput').value='${c}';sendChat()">${c}</button>`).join("");
 }
 function fmtC(n){ return n.toLocaleString("ca-ES"); }
+/* dataQA — preguntes de dades precises amb càlcul DETERMINISTA (mai LLM ni improvisació):
+   any concret, aquest any, any passat, mes concret, client concret. */
+function dataQA(q){
+  const s=q.toLowerCase();
+  const fmtC2=n=>Math.round(n).toLocaleString("ca-ES");
+  const anyReq=(s.match(/\b(20\d{2})\b/)||[])[1] || (/(aquest any|enguany|enguany)/.test(s)? String(new Date().getFullYear()) : null);
+  /* 1) FAC= per any: suma factures reals de l'any + esmenta la tendència si és l'any de la sèrie */
+  if(anyReq && (/factura|ingress|ingrés|cobr|factur|any/.test(s)||s.includes("xifres"))){
+    const fct=SP.factures.filter(f=>f.data&&f.data.startsWith(anyReq));
+    const anySerie=SP.series.length? String(new Date().getFullYear()):null;
+    if(fct.length){
+      const tot=fct.reduce((a,f)=>a+f.total,0);
+      const cob=fct.filter(f=>f.estat==="pagada").reduce((a,f)=>a+f.total,0);
+      const pen=fct.filter(f=>f.estat==="emesa"||f.estat==="vencuda").reduce((a,f)=>a+f.total,0);
+      const anyser=anySerie===anyReq?SP.series.reduce((a,m)=>a+m.in,0)*1000:null;
+      let out=`Facturació de <b>${anyReq}</b>: <b>${fmtC2(anyser??tot)} €</b>${anyser?" (sèrie mensual; "+SP.series.length+" mesos)":""}.`;
+      out+=`\nFactures registrades de ${anyReq}: ${fct.length} · cobrades ${fmtC2(cob)} € · pendents de cobrar ${fmtC2(pen)} €.`;
+      if(fct.length) out+=`\nTop factures: ${fct.slice().sort((a,b)=>b.total-a.total).slice(0,3).map(f=>f.client+" "+fmtC2(f.total)+"€").join(", ")}.`;
+      return out;
+    }
+    return `No tinc factures registrades de l'any <b>${anyReq}</b> al dataset actual (que cobreix ${SP.factures.map(f=>f.data&&f.data.slice(0,4)).filter(Boolean).sort().filter((x,i,a)=>!i||x!==a[i-1]).join(", ")||"sense dates"}). Pregunta'm per l'any amb dades.`;
+  }
+  /* 2) FAC= per mes concret (ex. "octubre", "d'octubre") */
+  const MESOS=["gener","febrer","març","abril","maig","juny","juliol","agost","setembre","octubre","novembre","desembre"];
+  const mi=MESOS.findIndex(m=>s.includes(m));
+  if(mi>=0 && /factura|ingress|ingrés|mes|m\./i.test(s)){
+    const k=SP.series[mi];
+    if(!k) return `No tinc dades del mes de <b>${MESOS[mi]}</b> al període analitzat.`;
+    return `Al mes de <b>${MESOS[mi]}</b> es van facturar <b>${fmtC2(k.in*1000)} €</b>, cobrar ${fmtC2(k.cob*1000)} € i gastar ${fmtC2(k.des*1000)} €.`;
+  }
+  return null;
+}
 /* motor local de respostes (fallback quan el baiós no està) — derivat del dataset, no inventat */
 function localAnswer(q){
   const s=q.toLowerCase();
@@ -3332,16 +3364,19 @@ async function sendChat(){
   chatState.busy=true; inp.value="";
   addMsg(q,"u");
   think(true);
-  // RAG: 1) baiós del tenant · 2) LLM global amb context recuperat · 3) predictor local · 4) motor directe
+  // RAG: 0) dataQA determinista (xifres per any/mes — mai LLM) · 1) baiós · 2) LLM global
   let ans=null, extra="";
-  const baios=await askBaios(q);
-  if(baios){ ans=baios; }
-  else{
-    const ctx=buildContext(q);               // retriever
-    const globalLLM=await askGlobalLLM(q,ctx); // generador extern (si configurat)
-    if(globalLLM){ ans=globalLLM; }
+  ans=dataQA(q);
+  if(!ans){
+    const baios=await askBaios(q);
+    if(baios){ ans=baios; }
     else{
-      ans=predict(q) || localAnswer(q);        // predictor de patrons → fallback directe
+      const ctx=buildContext(q);               // retriever
+      const globalLLM=await askGlobalLLM(q,ctx); // generador extern (si configurat)
+      if(globalLLM){ ans=globalLLM; }
+      else{
+        ans=predict(q) || localAnswer(q);        // predictor de patrons → fallback directe
+      }
     }
   }
   think(false);
