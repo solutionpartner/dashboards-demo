@@ -218,9 +218,10 @@
   #chatBtn:hover{ transform:translateY(-3px) scale(1.04); box-shadow:0 18px 44px rgba(231,196,125,.55); }
   #chatBtn .pulse{ position:absolute; inset:0; border-radius:50%; border:2px solid var(--spgold); animation:cpulse 2.2s ease-out infinite; }
   @keyframes cpulse{ 0%{transform:scale(1);opacity:.7} 100%{transform:scale(1.7);opacity:0} }
-  #chat{ position:fixed; right:18px; top:70px; bottom:100px; z-index:70; width:min(42vw,780px); border-radius:22px; overflow:hidden;
-    background:var(--drawer-bg); border:1px solid var(--border-strong); box-shadow:0 -10px 60px rgba(0,0,0,.45);
+  #chat{ position:fixed; right:18px; top:56px; bottom:70px; z-index:70; width:min(46vw,860px); border-radius:22px; overflow:hidden;
+    background:rgba(5,12,24,.97); border:1px solid rgba(231,196,125,.4); box-shadow:0 -8px 70px rgba(0,0,0,.65), 0 0 0 1px rgba(0,0,0,.4);
     display:flex; flex-direction:column; transform:translateY(24px); opacity:0; pointer-events:none; transition:.35s cubic-bezier(.16,1,.3,1); }
+  [data-theme="light"] #chat{ background:rgba(250,251,253,.99); border-color:rgba(11,29,50,.25); box-shadow:0 -8px 60px rgba(11,29,50,.22), 0 0 0 1px rgba(11,29,50,.08); }
   #chat.open{ transform:none; opacity:1; pointer-events:auto; }
   #chat .ch-hd{ padding:14px 18px; border-bottom:1px solid var(--row-line); display:flex; align-items:center; gap:10px; }
   #chat .ch-hd .ai{ width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--spgold),#d9a94f);color:#0B1D32;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
@@ -803,7 +804,7 @@
             </div>
           </div>
           <div class="setRow">
-            <input id="llmUrlInput" type="text" placeholder="https://api.openai.com/v1"
+            <input id="llmUrlInput" type="text" placeholder="https://open.bigmodel.cn/api/paas/v4"
                    style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
           </div>
           <div class="setRow">
@@ -813,6 +814,11 @@
           <div class="setRow">
             <span class="text-xs muted" id="llmState">— Sense LLM global —</span>
             <button class="btn primary" onclick="saveLLM()">Desa</button>
+          </div>
+          <div class="setRow">
+            <input id="llmModelInput" type="text" value="glm-4-flash"
+                   style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border-strong);color:var(--text);border-radius:10px;padding:9px 12px;font-size:13px"/>
+            <span class="text-xs muted">Model (per defecte glm-4-flash, gratuït de Zhipu)</span>
           </div>
         </div>
 
@@ -3063,6 +3069,25 @@ function localAnswer(q){
   if(/proveidor|compra|ordre/.test(s)){
     return SP.proveidors.map(p=>`· ${p.ord} — ${p.nom} — ${fmtC(p.import)} € (${p.estat})`).join("\n");
   }
+  /* orientació a seccions + conversa social (no requereix LLM extern) */
+  const navBtn=(lbl,mod)=>`<button class="chip" onclick="go('${mod}')" style="margin-top:8px;margin-right:6px">${lbl}</button>`;
+  const cap=(arr)=>"Coneix les teves dades: "+arr.map(x=>"<b>"+x+"</b>").join(", ")+". Puc combinar-les amb coneixement extern si hi ha un LLM connectat a Configuració.";
+  if(/^hola|^ei\b|^hey\b|^bon dia|^bona tarda|bona nit|^què tal|^com va/.test(s))
+    return `Hola! Sóc <b>l'assistent de negocis</b> del Business AI OS de <b>${cfg.client}</b>. Puc respondre't sobre la teva activitat comercial i operativa: ${cap(["facturació","cobraments","tendències","clients","stock","pipeline","proveïdors"])}`;
+  if(/gràcies|gracies|merci|thx|thank|visca|ok gràcies/.test(s))
+    return `De res! Quan vulguis, pregunta'm per ${cap(["què has facturat aquest mes","qui et deu diners","stock baix","el pipeline"])}`;
+  if(/qui ets|què ets|qui ets tu|que ets|que pots fer|ajuda|help|què pots|que pots/.test(s))
+    return `Sóc l'<b>assistent d'IA</b> dels dashboards SolutionPartner (Business AI OS). Analitzo les dades del client i les tradueixo en respostes i accions. T'ajudo amb: ${cap(["facturació","pendents de cobrar","tendència d'ingressos","clients","stock","pipeline","proveïdors"])}. Vols que t'ho mostri?`;
+  if(/informe|report|resum general|complet de l'empresa|estat de l'empresa|export/.test(s))
+    return `Els informes del negoci es generen a la secció <b>Reporting</b>. Obre-la i escull el format (report descriptiu de l'estat de la companyia) i baixa CSV, JSON, TXT, PDF o PPTX per a reunions.`+navBtn("Obre Reporting","report")+navBtn("Activa Pro (PDF/PPT)","cfg");
+  if(/automatitzac|automatizac|flux autom|nia de|campanya|bots\b/.test(s))
+    return `Aquí tens les <b>automatitzacions</b> actives i proposades pel sistema. Cada una enllaça amb el workflow real de l'empresa: cobraments, seguiment de clients, alertes de stock, reports automàtics.`+navBtn("Obre Automatitzacions","autos");
+  if(/configurac|configure|adjust|parametr|personalitzar|tema|idioma|notificacion/.test(s))
+    return `A <b>Configuració</b> pots gestionar el compte, els mòduls contractats, el tema, les notificacions i <b>connectar un LLM extern</b> (URL + API key, ex. GLM/OpenAI/OpenRouter) perquè respongui amb coneixement de mercat.`+navBtn("Obre Configuració","cfg");
+  if(/insight|intel·ligenc|troball|recomanac|què ha detectat|què veu/.test(s))
+    return `A <b>Insights IA</b> hi ha les troballes de l'anàlisi automàtica, agrupades entre comercial (Vendes · CRM) i operativa (Operació · ERP): riscos, concentracions, tendències i oportunitats.`+navBtn("Obre Insights IA","ins");
+  if(/dashboard|principal|panell|inici|central|home/.test(s))
+    return `El <b>dashboard central</b> de ${cfg.client} resumeix la salut del negoci, els KPI principals (facturació, marge, cobrament, ticke mitjà) i les tendències.`+navBtn("Obre el Dashboard","dash");
   /* resposta genèrica */ 
   return `T'he entès com a: "<i>${q}</i>".\nPuc respondre sobre <b>facturació, cobraments pendents, tendències, clients, stock i pipeline</b>. Prova una de les recomanades, o pregunta-ho amb altres paraules.`;
 }
@@ -3136,14 +3161,15 @@ async function askGlobalLLM(q, context){
 function saveLLM(){
   const url=document.getElementById("llmUrlInput").value.trim();
   const key=document.getElementById("llmKeyInput").value.trim();
+  const model=(document.getElementById("llmModelInput")?.value.trim())||"glm-4-flash";
   const st=document.getElementById("llmState");
   let ok=true, msg="";
-  if(!url){ ok=false; msg="Indica la URL de l'endpoint (ex. https://api.openai.com/v1)"; }
+  if(!url){ ok=false; msg="Indica la URL de l'endpoint (ex. https://open.bigmodel.cn/api/paas/v4 per GLM)"; }
   else if(!/^https?:\/\//i.test(url)){ ok=false; msg="La URL ha de començar per http(s)://"; }
   if(!key){ ok=false; msg=msg||"Indica l'API key"; }
   if(!ok){ st.textContent="⚠️ "+msg; st.style.color="#f0a09a"; return; }
-  cfg.llm.url=url; cfg.llm.key=key;
-  localStorage.setItem("sp_llm_url",url); localStorage.setItem("sp_llm_key",key);
+  cfg.llm.url=url; cfg.llm.key=key; cfg.llm.model=model;
+  localStorage.setItem("sp_llm_url",url); localStorage.setItem("sp_llm_key",key); localStorage.setItem("sp_llm_model",model);
   st.textContent="⏳ Comprovant connexió..."; st.style.color="";
   fetch(url.replace(/\/+$/,"")+"/models",{headers:{Authorization:"Bearer "+key}})
     .then(r=>{ if(!r.ok){ throw new Error("HTTP "+r.status); }
@@ -3156,6 +3182,10 @@ function setupNotifyInputs(){
   const w=document.getElementById("notifyWebhookInput"), t=document.getElementById("notifyToInput");
   if(w) w.value=localStorage.getItem("sp_notify_webhook")||"";
   if(t) t.value=localStorage.getItem("sp_notify_to")||"";
+  const lu=document.getElementById("llmUrlInput"), lk=document.getElementById("llmKeyInput"), lm=document.getElementById("llmModelInput");
+  if(lu) lu.value=localStorage.getItem("sp_llm_url")||"";
+  if(lk) lk.value=localStorage.getItem("sp_llm_key")||"";
+  if(lm) lm.value=localStorage.getItem("sp_llm_model")||"glm-4-flash";
 }
 function saveNotify(){
   const w=document.getElementById("notifyWebhookInput").value.trim(), t=document.getElementById("notifyToInput").value.trim();
