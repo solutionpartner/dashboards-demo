@@ -3245,8 +3245,8 @@ function predict(q){
     stockBajo.forEach(p=>{ out.push(`Pel producte <b>${p.nom}</b>, amb ${p.stock} unitats i sota mínim (${p.min}), cal reposar ja. Si el ritme de sortida es manté, el desabastiment és imminent.`); });
     if(!stockBajo.length) out.push("Stock correcte; cap reposició urgent ara mateix.");
   }
-  /* Oportunitat de vendes: quina fase concentra més valor per tancar */
-  if(/oportunitat|pipeline|tancar|canviar|millor/.test(s)){
+  /* Oportunitat de vendes: quina fase concentra més valor per tancar (preguntes EXPLÍCITES sobre el pipeline) */
+  if(/oportunitat|pipeline|tancar|canviar|fases avançades/.test(s)&&!/millorar|millora|aconsell|sugger|com puc/.test(s)){
     const avanç=obert.filter(d=>d.prob>=55).reduce((a,d)=>a+d.valor,0);
     out.push(`Hi ha ${obert.filter(d=>d.prob>=55).length} oportunitats en fases avançades (Prob.≥55%) que sumen ${fmtC(avanç)} €. Prioritzar-ne el tancament podria afegir ingressos propers i millorar la salut (${saludVal}/100).`);
   }
@@ -3263,11 +3263,17 @@ async function askGlobalLLM(q, context){
     const r=await fetch((L.url.replace(/\/$/,""))+"/chat/completions",{method:"POST",
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+L.key},
       body:JSON.stringify({model:L.model||"gpt-4o-mini",messages:chat,temperature:0.4,max_tokens:600})});
-    if(!r.ok) return null;
+    if(!r.ok){
+      let det="HTTP "+r.status;
+      try{ const e=await r.json(); det+=" · "+(e.error&&(e.error.message||e.error.code)||JSON.stringify(e).slice(0,120)); }catch(_){}
+      window.__llmErr=det;
+      return null;
+    }
+    window.__llmErr=null;
     const d=await r.json();
     const c=d.choices&&d.choices[0]&&d.choices[0].message&&d.choices[0].message.content;
     return c?c.trim():null;
-  }catch(e){ return null; }
+  }catch(e){ window.__llmErr="excepció: "+e.message; return null; }
 }
 /* preseleccions de proveïdor LLM — el model gratuït de cada servei */
 const LLM_PROVIDERS={
@@ -3492,6 +3498,7 @@ async function sendChat(){
       const globalLLM=await askGlobalLLM(q,ctx); // generador extern (si configurat)
       if(globalLLM){ ans=globalLLM; }
       else{
+        if(window.__llmErr) extra = `<div class="text-[10px] muted mt-1" style="opacity:.7">LLM no respon (${window.__llmErr}) — utilitzo el motor local.</div>`;
         ans=predict(q) || localAnswer(q);        // predictor de patrons → fallback directe
       }
     }
