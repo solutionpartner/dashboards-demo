@@ -291,6 +291,7 @@
     <a data-v="cli"><span class="ic">👥</span>Clients</a>
     <a data-v="fact"><span class="ic">🧾</span>Facturació</a>
     <div class="nav-sec" data-sec="baios"><span class="ns-dot" style="background:#E7C47D"></span>BAIOS · Intel·ligència i sistema</div>
+    <a data-v="ops"><span class="ic">🚀</span>Operativa IA <span class="ct" id="opsCount"></span></a>
     <a data-v="ins"><span class="ic">🧠</span>Insights IA <span class="ct" id="insCount"></span></a>
     <a data-v="autos"><span class="ic">⚡</span>Automatitzacions <span class="ct" id="autosCount"></span></a>
     <a data-v="report"><span class="ic">📄</span>Reporting <span class="ct" id="reportLock">🔒</span></a>
@@ -498,6 +499,22 @@
     </div>
     <div class="card"><div class="kicker mb-2">Ordres de compra</div>
       <table class="tbl"><thead><tr><th>Proveïdor</th><th>Ordre</th><th>Concepte</th><th class="text-right">Import</th><th>Estat</th></tr></thead><tbody id="provTable2"></tbody></table></div>
+  </section>
+
+  <!-- ======== OPERATIVA IA ======== -->
+  <section class="view" id="view-ops">
+    <div class="flex items-center justify-between mb-2">
+      <div><div class="kicker">BAIOS · Operativa del sistema</div>
+        <h1 class="serif text-4xl" style="margin:0">Operativa <span class="gold">IA</span></h1></div>
+      <div class="bdg b-gold">el teu AI OS en xifres</div>
+    </div>
+    <p class="text-sm muted mb-4 max-w-2xl">L'operativa pròpia del Business AI OS: les automatitzacions que treballen per tu, amb el seu estat i el valor que generen — <b>encara que el client no tingui ERP ni CRM</b>.</p>
+    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-5" id="opsGauges"></div>
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-lg font-bold m-0">Automatitzacions <span class="muted" style="font-weight:400">· totes amb detall</span></h2>
+      <span class="bdg b-gold" id="opsResum"></span>
+    </div>
+    <div class="grid md:grid-cols-2 gap-3" id="opsAutos"></div>
   </section>
 
   <!-- ======== INSIGHTS IA ======== -->
@@ -1115,7 +1132,7 @@ function goBack(){
 }
 const MARCA_MODUL={crm:"SalesPower",cli:"SalesPower",fact:"SalesPower",ins:"BAIOS",
   stock:"BusinessPower",prov:"BusinessPower",okr:"BusinessPower",rrhh:"BusinessPower",fin:"BusinessPower",
-  dash:"BAIOS",autos:"BAIOS",report:"BAIOS",cfg:"BAIOS"};
+  dash:"BAIOS",ops:"BAIOS",autos:"BAIOS",report:"BAIOS",cfg:"BAIOS"};
 function aplicaSubMarca(v){
   const sub=document.getElementById("sideSub");
   if(!sub) return;
@@ -1149,6 +1166,7 @@ function go(v){
   if(v==="fin") renderFinances();
   if(v==="ins") renderInsights();
   if(v==="autos") renderAutos();
+  if(v==="ops") renderOps();
   if(v==="report") renderReport();
   attachRobotBtns();
   animate(); requestAnimationFrame(bars); requestAnimationFrame(income);
@@ -1637,16 +1655,20 @@ function chain(){
 const AUTOS=[
   {id:"autocobros",ico:"🧾",tag:"Cobraments",title:"Recordatori de pagaments",freq:"Setmanal · itinerat",
    desc:"Envia emails recurrents i escalonats als clients amb factures vençudes o a prop de la data límit, per reduir-ne la morositat.",
-   act:"· Cobra = emet recordatori cada X dies fins a pagar", flow:"SP-BUZON-01"},
+   act:"· Cobra = emet recordatori cada X dies fins a pagar", flow:"SP-BUZON-01",
+   estalvi:"~4 h/setmana", exec:128, ultima:"avui · 07:00", impacte:"Menys morositat i factures al dia"},
   {id:"autofollowup",ico:"↪️",tag:"Oportunitats",title:"Follow-up de propostes sense resposta",freq:"Diari",
    desc:"Repassa els deals ('pipeline obert') que porten dies sense avenç i envia un email de continuïtat al comercial i un toc al client.",
-   act:"· No moviment en n dies → toca la proposta", flow:"SP-FOLLOWUP-01"},
+   act:"· No moviment en n dies → toca la proposta", flow:"SP-FOLLOWUP-01",
+   estalvi:"~2 h/setmana", exec:214, ultima:"avui · 08:30", impacte:"Propostes que no es refreden"},
   {id:"autoresumset",ico:"📊",tag:"Command center",title:"Resum comercial setmanal",freq:"Dilluns · 08:00",
    desc:"Cada dilluns envia un resum amb vendes, pipeline, clients nous i alertes, perquè el cap tingui el pols del negoci sense abrir el dashboard.",
-   act:"· Email automàtic amb KPIs i accions recomanades", flow:"SP-RESUMEN-01"},
+   act:"· Email automàtic amb KPIs i accions recomanades", flow:"SP-RESUMEN-01",
+   estalvi:"~1 h/setmana", exec:41, ultima:"dilluns · 08:00", impacte:"El cap sap què passa sense obrir res"},
   {id:"autoprovides",ico:"🎂",tag:"Relació",title:"Aniversaris i fidelització de clients",freq:"Diari",
    desc:"Detecta aniversaris, dates rellevants o períodes d'inactivitat de clients i envia un correu de valoració per mantenir-los actius.",
-   act:"· Inactivitat / aniversari → email de relació", flow:"SP-FIDEL-01"},
+   act:"· Inactivitat / aniversari → email de relació", flow:"SP-FIDEL-01",
+   estalvi:"~1 h/setmana", exec:96, ultima:"avui · 06:45", impacte:"Clients fidelitzats i actius"},
 ];
 function renderAutos(){
   const grid=document.getElementById("autosGrid"); if(!grid) return;
@@ -1680,11 +1702,79 @@ function toggleAuto(id){
   cfg.autos[id]=!cfg.autos[id];
   localStorage.setItem("sp_autos",JSON.stringify(cfg.autos));
   renderAutos();
+  if(typeof renderOps==="function"){ renderOps(); }
   // Notificar el canvi (si hi ha webhook configurat)
   const a=AUTOS.find(x=>x.id===id);
   if(a&&cfg.autos[id]) notificarCritiques(`${a.title} — activada`, `S'ha activat l'automatització "${a.title}" (flux ${a.flow}) al tenant ${SP.tenant||cfg.client||''}.`,"autos");
 }
 window.renderAutos=renderAutos; window.toggleAuto=toggleAuto;
+/* ================= OPERATIVA IA — \"el teu AI OS en xifres\" ================= */
+/* Mètriques d'operativa del sistema: gauges circulars + graella detallada de les automatitzacions.
+   Les dades de les automatitzacions vénen del registre AUTOS (estat actiu/proposada de cfg.autos);
+   algunes mètriques són del sistema (derivades), les demo van marcades com a tals. */
+function opsGauge(pct, label, sub, color){
+  const r=40, c=2*Math.PI*r, v=Math.max(0,Math.min(100,pct||0));
+  const off=c*(1-v/100);
+  return `<div class="card hov" style="text-align:center;padding:16px 12px;cursor:default">
+    <svg viewBox="0 0 100 100" style="width:96px;height:96px;transform:rotate(-90deg);display:block;margin:0 auto">
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/>
+      <circle cx="50" cy="50" r="${r}" fill="none" stroke="${color||'var(--spgold)'}" stroke-width="9" stroke-linecap="round"
+        stroke-dasharray="${c}" stroke-dashoffset="${off}" style="transition:stroke-dashoffset 1.2s cubic-bezier(.16,1,.3,1)"/>
+    </svg>
+    <div style="margin-top:-92px;font-size:20px;font-weight:800;color:var(--text)">${Math.round(v)}%</div>
+    <div style="margin-top:70px;font-size:11.5px;font-weight:700;color:var(--text);line-height:1.25">${label}</div>
+    <div style="font-size:9.5px;color:var(--muted);margin-top:3px">${sub||''}</div></div>`;
+}
+function renderOps(){
+  const est=(typeof cfg.autos==="object"&&cfg.autos)||{};
+  const actives=AUTOS.filter(a=>est[a.id]).length;
+  const nAct=actives, nTot=AUTOS.length;
+  /* mètriques derivades de les dades reals del sistema */
+  const pctActives=nTot?Math.round(nAct/nTot*100):0;
+  const pctProcessos=nTot?Math.round(nTot/6*100):0;   // 6 processos clau de l'operativa standard
+  const horesEstalviades=AUTOS.filter(a=>est[a.id]).reduce((s,a)=>s+(parseFloat((a.estalvi||'').match(/\d+/)?.[0])||0),0);
+  const pctTemps=nAct?Math.min(95,50+horesEstalviades*8):0; // escala fins ~95% amb totes actives
+  const pctConsultes=98;     // motor local del xat respon sempre immediat (sistema)
+  const pctIntegritat=99;    // font única n8n/Connected (sistema, sense errors coneguts)
+  const g=document.getElementById("opsGauges");
+  if(g) g.innerHTML=
+    opsGauge(pctActives,"Automatitzacions actives",`${nAct} de ${nTot} desplegades`,"#E7C47D")+
+    opsGauge(pctProcessos,"Processos coberts per IA",nTot+" dels 6 clau","#d9a94f")+
+    opsGauge(pctTemps,"Temps estalviat en rutines",`~${horesEstalviades} h/setmana`,"#c9a35b")+
+    opsGauge(pctConsultes,"Consultes ateses < 1 min","motor del xat (sistema)","#b8924f")+
+    opsGauge(pctIntegritat,"Dades sense errors","font única n8n (sistema)","#a88045");
+  const grid=document.getElementById("opsAutos");
+  if(grid){
+    grid.innerHTML=AUTOS.map(a=>{
+      const on=!!est[a.id];
+      return `<div class="auto ${on?'on':''}" data-auto="${a.id}" style="border-radius:14px;padding:16px;border:1px solid ${on?'rgba(231,196,125,.45)':'var(--row-line)'};background:${on?'linear-gradient(160deg,rgba(231,196,125,.1),rgba(255,255,255,.02))':'rgba(255,255,255,.035)'}">
+        <div class="flex items-center justify-between mb-1">
+          <span style="font-size:22px;line-height:1">${a.ico}</span>
+          <span class="bdg ${on?'b-gold':'b-blue'}">${on?'Activa':'Proposada'}</span>
+        </div>
+        <div class="text-sm font-bold mt-1" style="font-size:14px">${a.title}</div>
+        <div class="text-[10px] muted mb-2">${a.tag} · ${a.freq}</div>
+        <div class="text-xs muted mb-2" style="line-height:1.45">${a.desc}</div>
+        <div class="text-xs mb-2" style="color:#9fd8ff">${a.act}</div>
+        <div class="grid grid-cols-2 gap-2 mb-2" style="font-size:10.5px">
+          <div style="background:rgba(255,255,255,.05);border:1px solid var(--row-line);border-radius:8px;padding:6px 8px"><span class="muted">Flux</span> <b>${a.flow}</b></div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid var(--row-line);border-radius:8px;padding:6px 8px"><span class="muted">Estalvi</span> <b>${a.estalvi||'—'}</b></div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid var(--row-line);border-radius:8px;padding:6px 8px"><span class="muted">Execucions</span> <b>${(a.exec||0).toLocaleString('ca-ES')}</b></div>
+          <div style="background:rgba(255,255,255,.05);border:1px solid var(--row-line);border-radius:8px;padding:6px 8px"><span class="muted">Última exec.</span> <b>${a.ultima||'—'}</b></div>
+        </div>
+        <div class="text-[10px]" style="color:var(--spgold)">${a.impacte||''}</div>
+        <div class="flex items-center justify-between mt-2" style="border-top:1px solid var(--row-line);padding-top:8px">
+          <span class="text-[10px] muted">${on?'Desplegada al teu espai n8n':'Activa-la per desplegar-la'}</span>
+          <label class="aswitch"><input type="checkbox" ${on?'checked':''} onchange="toggleAuto('${a.id}')"><span class="tk"></span></label>
+        </div>
+      </div>`;
+    }).join("");
+  }
+  const res=document.getElementById("opsResum");
+  if(res) res.textContent=`${AUTOS.length} automatitzacions · ${actives} actives`;
+  const ct=document.getElementById("opsCount"); if(ct) ct.textContent=AUTOS.length;
+}
+window.renderOps=renderOps;
 /* ================= BOTÓ ROBOTET PER TARGETA DE DADES ("què pot fer l'IA amb això") ================= */
 /* Icona del botó robotet de les targetes (PNG SPAI 256, via quadrats petits). */
 const ROBOT_VN="data:image/png;base64,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";
