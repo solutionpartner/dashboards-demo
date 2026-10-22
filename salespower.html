@@ -70,6 +70,11 @@
   .nav{ display:flex; flex-direction:column; gap:2px; flex:1; overflow-y:auto; }
   .nav-sec{ display:flex; align-items:center; gap:7px; margin:16px 12px 2px; padding:4px 10px; font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:#fff; background:rgba(255,255,255,.10); border-radius:99px; }
   .nav-sec .ns-dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+  .nav-fold{ background:none; border:none; color:inherit; cursor:pointer; font-size:10px; margin-left:auto; padding:2px 4px; opacity:.7; transition:.2s; display:inline-flex; align-items:center; }
+  .nav-fold:hover{ opacity:1; color:var(--spgold); }
+  nav.folded-baios [data-v="ops"],nav.folded-baios [data-v="ins"],nav.folded-baios [data-v="autos"],nav.folded-baios [data-v="report"],nav.folded-baios [data-v="cfg"],
+  nav.folded-erp [data-v="stock"],nav.folded-erp [data-v="prov"],nav.folded-erp [data-v="okr"],nav.folded-erp [data-v="rrhh"],nav.folded-erp [data-v="fin"],
+  nav.folded-crm [data-v="crm"],nav.folded-crm [data-v="cli"],nav.folded-crm [data-v="fact"]{ display:none !important; }
   .nav a{ display:flex; align-items:center; gap:11px; padding:9px 20px; font-size:13px; color:var(--muted); text-decoration:none; border-left:2px solid transparent; transition:.25s; cursor:pointer; }
   .nav a:focus-visible{ outline:2px solid rgba(231,196,125,.8); outline-offset:-2px; color:var(--text); }
   .nav a:hover{ color:var(--text); background:rgba(255,255,255,.04); }
@@ -126,6 +131,10 @@
   .b-red{ background:rgba(199,84,80,.16); color:#f0a09a; border:1px solid rgba(199,84,80,.4); }
   .b-orange{ background:rgba(230,126,34,.16); color:#f2b878; border:1px solid rgba(230,126,34,.4); }
   .b-violet{ background:rgba(130,110,200,.18); color:#b9aee0; border:1px solid rgba(130,110,200,.42); }
+.ops-reg tbody tr{ border-bottom:1px solid rgba(255,255,255,.04); transition:background .15s; }
+  .ops-reg tbody tr:hover{ background:rgba(231,196,125,.08); }
+  .ops-reg td{ padding:9px 12px; vertical-align:middle; }
+  .ops-reg .mono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11px; }
   .b-tealX{ display:none; } /* sense verd/teal */
   .tbl{ width:100%; border-collapse:collapse; font-size:12.5px; }
   .tbl th{ text-align:left; padding:8px 10px; color:var(--muted); font-weight:600; font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; border-bottom:1px solid var(--row-line); }
@@ -280,22 +289,22 @@
   <div class="health-mini" id="healthMini"></div>
   <nav class="nav" id="nav">
     <a data-v="dash" class="act"><span class="ic">🏠</span>Dashboard central</a>
-    <div class="nav-sec" data-sec="erp"><span class="ns-dot" style="background:#67b8f0"></span>BusinessPower · ERP</div>
-    <a data-v="stock" data-mod="erp"><span class="ic">📦</span>Stock</a>
-    <a data-v="prov" data-mod="erp"><span class="ic">🚚</span>Proveïdors</a>
-    <a data-v="okr" data-mod="okr"><span class="ic">🎯</span>Objectius</a>
-    <a data-v="rrhh" data-mod="rrhh"><span class="ic">👥</span>Equip</a>
-    <a data-v="fin" data-mod="fin"><span class="ic">💶</span>Finances</a>
-    <div class="nav-sec" data-sec="crm"><span class="ns-dot" style="background:#f0a09a"></span>SalesPower · CRM</div>
-    <a data-v="crm" data-mod="crm"><span class="ic">🤝</span>CRM &amp; Vendes</a>
-    <a data-v="cli"><span class="ic">👥</span>Clients</a>
-    <a data-v="fact"><span class="ic">🧾</span>Facturació</a>
-    <div class="nav-sec" data-sec="baios"><span class="ns-dot" style="background:#E7C47D"></span>BAIOS · Intel·ligència i sistema</div>
+    <div class="nav-sec" data-sec="baios"><span class="ns-dot" style="background:#E7C47D"></span>BAIOS · Intel·ligència i sistema<button class="nav-fold" onclick="foldSection('baios')" title="Ampliar/replegar">▾</button></div>
     <a data-v="ops"><span class="ic">🚀</span>Operativa IA <span class="ct" id="opsCount"></span></a>
     <a data-v="ins"><span class="ic">🧠</span>Insights IA <span class="ct" id="insCount"></span></a>
     <a data-v="autos"><span class="ic">⚡</span>Automatitzacions <span class="ct" id="autosCount"></span></a>
     <a data-v="report"><span class="ic">📄</span>Reporting <span class="ct" id="reportLock">🔒</span></a>
     <a data-v="cfg"><span class="ic">⚙️</span>Configuració</a>
+    <div class="nav-sec" data-sec="erp"><span class="ns-dot" style="background:#67b8f0"></span>BusinessPower · ERP<button class="nav-fold" onclick="foldSection('erp')" title="Ampliar/replegar">▾</button></div>
+    <a data-v="stock" data-mod="erp"><span class="ic">📦</span>Stock</a>
+    <a data-v="prov" data-mod="erp"><span class="ic">🚚</span>Proveïdors</a>
+    <a data-v="okr" data-mod="okr"><span class="ic">🎯</span>Objectius</a>
+    <a data-v="rrhh" data-mod="rrhh"><span class="ic">👥</span>Equip</a>
+    <a data-v="fin" data-mod="fin"><span class="ic">💶</span>Finances</a>
+    <div class="nav-sec" data-sec="crm"><span class="ns-dot" style="background:#f0a09a"></span>SalesPower · CRM<button class="nav-fold" onclick="foldSection('crm')" title="Ampliar/replegar">▾</button></div>
+    <a data-v="crm" data-mod="crm"><span class="ic">🤝</span>CRM &amp; Vendes</a>
+    <a data-v="cli"><span class="ic">👥</span>Clients</a>
+    <a data-v="fact"><span class="ic">🧾</span>Facturació</a>
   </nav>
 </aside>
 
@@ -511,7 +520,21 @@
     <p class="text-sm muted mb-4 max-w-2xl">L'operativa pròpia del Business AI OS: les automatitzacions que treballen per tu, amb el seu estat i el valor que generen — <b>encara que el client no tingui ERP ni CRM</b>.</p>
     <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-5" id="opsGauges"></div>
     <div class="flex items-center justify-between mb-2">
-      <h2 class="text-lg font-bold m-0">Automatitzacions <span class="muted" style="font-weight:400">· totes amb detall</span></h2>
+      <h2 class="text-lg font-bold m-0">Registre d'automatismes <span class="muted" style="font-weight:400" id="opsRegistreCount"></span></h2>
+      <span class="text-[10px] muted">clica una fila per activar / desactivar</span>
+    </div>
+    <div style="overflow:auto;border:1px solid var(--row-line);border-radius:14px;background:rgba(255,255,255,.03);margin-bottom:22px">
+      <table class="ops-reg" style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr style="text-align:left;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border-bottom:1px solid var(--row-line)">
+          <th style="padding:10px 12px">Automatisme</th><th style="padding:10px 8px">ID</th><th style="padding:10px 8px">Tipus</th>
+          <th style="padding:10px 8px">Tecnologia</th><th style="padding:10px 8px">Àrea</th><th style="padding:10px 8px">Freqüència</th>
+          <th style="padding:10px 8px">Estat</th><th style="padding:10px 12px">Flux</th>
+        </tr></thead>
+        <tbody id="opsRegistreBody"></tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between mb-2">
+      <h2 class="text-lg font-bold m-0">Detall per automatisme <span class="muted" style="font-weight:400">· les 4 contractables del tenant</span></h2>
       <span class="bdg b-gold" id="opsResum"></span>
     </div>
     <div class="grid md:grid-cols-2 gap-3" id="opsAutos"></div>
@@ -1708,7 +1731,49 @@ function toggleAuto(id){
   if(a&&cfg.autos[id]) notificarCritiques(`${a.title} — activada`, `S'ha activat l'automatització "${a.title}" (flux ${a.flow}) al tenant ${SP.tenant||cfg.client||''}.`,"autos");
 }
 window.renderAutos=renderAutos; window.toggleAuto=toggleAuto;
-/* ================= OPERATIVA IA — \"el teu AI OS en xifres\" ================= */
+/* ===== INVENTARI COMPLET D'AUTOMATISMES (llistat de registres per a la vista Operativa IA) ===== */
+/* Tots els automàtics que poden existir per al client: els 4 contractables del tenant (AUTOS) + el
+   catàleg d'automatitzacions n8n/IA del kit. Cada registre: nom, id, tipus (amb/sense IA), tecnologia,
+   àrea, freqüència, estat i flux. */
+const AUTOS_INV=[
+  {id:"autocobros",nom:"Recordatori de pagaments",tipo:"IA",tec:"n8n",area:"Cobraments",freq:"Setmanal · itinerat",estat:"activa",flux:"SP-BUZON-01",desc:"Emails recurrents als clients amb factures vençudes o a prop de vèncer."},
+  {id:"autofollowup",nom:"Follow-up de propostes sense resposta",tipo:"IA",tec:"n8n",area:"Oportunitats",freq:"Diari",estat:"proposada",flux:"SP-FOLLOWUP-01",desc:"Toca les propostes que porten dies sense avenç (comercial + client)."},
+  {id:"autoresumset",nom:"Resum comercial setmanal",tipo:"IA",tec:"n8n",area:"Command center",freq:"Dilluns · 08:00",estat:"proposada",flux:"SP-RESUMEN-01",desc:"KPIs, pipeline i alertes cada dilluns per email."},
+  {id:"autoprovides",nom:"Aniversaris i fidelització de clients",tipo:"sense IA",tec:"n8n",area:"Relació",freq:"Diari",estat:"proposada",flux:"SP-FIDEL-01",desc:"Emails de valoració per dates rellevants o inactivitat."},
+  {id:"AUT-FAC-01",nom:"Facturació automàtica de repartos",tipo:"IA",tec:"n8n",area:"Administració",freq:"Setmanal",estat:"disponible",flux:"SP-FAC-01",desc:"Genera i envia factures a partir de les comandes tancades."},
+  {id:"AUT-STK-01",nom:"Control de stock en temps real",tipo:"sense IA",tec:"n8n",area:"Operació",freq:"Continu",estat:"disponible",flux:"SP-STK-01",desc:"Alertes de referències sota mínim sense revisar el magatzem."},
+  {id:"AUT-RUT-01",nom:"Planificació de rutes intel·ligent",tipo:"IA",tec:"n8n",area:"Vendes",freq:"Diari",estat:"disponible",flux:"SP-RUT-01",desc:"Ordena les entregues per ruta òptima."},
+  {id:"AUT-AVI-01",nom:"Avisos d'entrega al client",tipo:"sense IA",tec:"n8n",area:"Operació",freq:"Continu",estat:"disponible",flux:"SP-AVI-01",desc:"Notifica l'estat de l'encàrrec al client per SMS/email."},
+  {id:"AUT-LEAD-01",nom:"Captura i primera resposta de leads",tipo:"IA",tec:"Make",area:"Màrqueting",freq:"Continu",estat:"disponible",flux:"SP-LEAD-01",desc:"Respon automàticament als leads nous i els classifica."},
+  {id:"AUT-SEO-01",nom:"Monitor SEO i alertes de posicionament",tipo:"IA",tec:"Make",area:"Màrqueting",freq:"Setmanal",estat:"disponible",flux:"SP-SEO-01",desc:"Seguiment de paraules clau i alertes de caigudes."},
+  {id:"AUT-SLACK-01",nom:"Resum d'activitat diària al xat de l'equip",tipo:"sense IA",tec:"Zapier",area:"Command center",freq:"Diari",estat:"disponible",flux:"SP-SLACK-01",desc:"Recull les accions del dia i les envia al canal de l'equip."},
+  {id:"AUT-WEBHOOK-01",nom:"Sincronització de comandes web → ERP",tipo:"sense IA",tec:"Zapier",area:"Vendes",freq:"Continu",estat:"disponible",flux:"SP-WEB-01",desc:"Cada comanda de la web es crea automàticament a l'ERP."},
+  {id:"AUT-FACT-IA-01",nom:"Resum d'estat financer amb IA",tipo:"IA",tec:"n8n",area:"Finances",freq:"Setmanal",estat:"disponible",flux:"SP-FINIA-01",desc:"La IA interprea la situació financera i envia un resum en llenguatge planer."},
+  {id:"AUT-OKR-01",nom:"Seguiment d'objectius i alertes de progrés",tipo:"IA",tec:"n8n",area:"Objectius",freq:"Setmanal",estat:"disponible",flux:"SP-OKR-01",desc:"Revisa els OKR i alerta quan un resultat clau va endarrerit."},
+];
+function renderOpsRegistre(){
+  const est=(typeof cfg.autos==="object"&&cfg.autos)||{};
+  const fila=(a)=>{
+    const actiu=Object.prototype.hasOwnProperty.call(est,a.id)?!!est[a.id]:(a.estat==="activa");
+    const badge = actiu?'<span class="bdg b-gold">activa</span>' : (a.estat==="proposada"?'<span class="bdg b-blue">proposada</span>':'<span class="bdg b-violet">disponible</span>');
+    const tipusIA = a.tipo==="IA" ? '<span class="bdg b-gold" style="font-size:9px">IA</span>' : '<span class="bdg" style="font-size:9px;background:rgba(255,255,255,.08)">sense IA</span>';
+    return `<tr style="cursor:pointer" onclick="toggleAuto('${a.id}')" title="Clica per activar/desactivar">
+      <td class="font-bold">${a.nom}</td>
+      <td class="mono text-xs muted">${a.id}</td>
+      <td>${tipusIA}</td>
+      <td><span class="text-xs">${a.tec}</span></td>
+      <td class="text-xs muted">${a.area}</td>
+      <td class="text-xs muted">${a.freq}</td>
+      <td>${badge}</td>
+      <td class="mono text-xs muted">${a.flux}</td></tr>`;
+  };
+  const tb=document.getElementById("opsRegistreBody");
+  if(tb) tb.innerHTML=AUTOS_INV.map(fila).join("");
+  const el=document.getElementById("opsRegistreCount");
+  if(el) el.textContent=AUTOS_INV.length+" automatismes en catàleg";
+}
+window.renderOpsRegistre=renderOpsRegistre;
+/* ================= OPERATIVA IA — "el teu AI OS en xifres" ================= */
 /* Mètriques d'operativa del sistema: gauges circulars + graella detallada de les automatitzacions.
    Les dades de les automatitzacions vénen del registre AUTOS (estat actiu/proposada de cfg.autos);
    algunes mètriques són del sistema (derivades), les demo van marcades com a tals. */
@@ -1773,6 +1838,7 @@ function renderOps(){
   const res=document.getElementById("opsResum");
   if(res) res.textContent=`${AUTOS.length} automatitzacions · ${actives} actives`;
   const ct=document.getElementById("opsCount"); if(ct) ct.textContent=AUTOS.length;
+  renderOpsRegistre();
 }
 window.renderOps=renderOps;
 /* ================= BOTÓ ROBOTET PER TARGETA DE DADES ("què pot fer l'IA amb això") ================= */
@@ -2874,6 +2940,25 @@ function applyPeerButton(){
 /* navega al dashboard del producte germà (mateix directori, sufix tolerant: -dashboard.html, .html, etc.) */
 
 /* -------- TERRENY: titol i navegacio per moduls contractats del tenant -------- */
+function foldSection(sec){
+  const n=document.getElementById("nav");
+  const cls="folded-"+sec;
+  const folded=n.classList.toggle(cls,n.classList.contains(cls)?false:true);
+  try{ localStorage.setItem("sp_fold_"+sec, folded?"1":"0"); }catch(e){}
+  const btns=document.querySelectorAll(`.nav-sec[data-sec="${sec}"] .nav-fold`);
+  btns.forEach(b=>b.textContent=folded?"▸":"▾");
+}
+window.foldSection=foldSection;
+function aplicarFoldInicial(){
+  ["baios","erp","crm"].forEach(sec=>{
+    const f=(()=>{try{return localStorage.getItem("sp_fold_"+sec)==="1";}catch(e){return false;}})();
+    if(f){
+      const n=document.getElementById("nav");
+      if(n) n.classList.add("folded-"+sec);
+      document.querySelectorAll(`.nav-sec[data-sec="${sec}"] .nav-fold`).forEach(b=>b.textContent="▸");
+    }
+  });
+}
 function aplicarModuls(){
   const mods=(typeof SP!=="undefined"&&SP.moduls)||cfg.moduls||"";
   const te=(m)=>new RegExp("\\b"+m+"\\b").test(mods);
@@ -3101,7 +3186,7 @@ function applyModules(){
   if(!cfg.ia.iaExplicacio){ document.querySelectorAll(".ins-expl").forEach(e=>e.style.display="none"); }
   if(!cfg.ia.iaSpark){ hide("#view-dash #sparkCard, #view-dash #tendSub"); }
 }
-renderCfg();applyModules();applyLogo();setupDataInputs();applyRobot();renderModules();setupNotifyInputs();applyPeerButton();setMicSupport();setupPeerUrlInput();attachRobotBtns();setupReporting();aplicarModuls();
+renderCfg();applyModules();applyLogo();setupDataInputs();applyRobot();renderModules();setupNotifyInputs();applyPeerButton();setMicSupport();setupPeerUrlInput();attachRobotBtns();setupReporting();aplicarModuls();aplicarFoldInicial();
 /* ================= ASSISTENT D'IA (chat connectat al baïós del tenant) ================= */
 /* El baiós real s'exposa via `/v1/execute-intent` / `/v1/invoke-tool` (HTTP local del tenant).
    Si tenim un endpoint el cridem; si no, contestem amb un motor local derivat del dataset
